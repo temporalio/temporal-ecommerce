@@ -13,6 +13,11 @@ type (
 	CartState struct {
 		Items []CartItem
 	}
+
+	UpdateCartMessage struct {
+		Remove bool
+		Item   CartItem
+	}
 )
 
 func CartWorkflow(ctx workflow.Context, state CartState) error {
@@ -26,14 +31,17 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 		return err
 	}
 
-	// TripCh to wait on trip completed event signals
-	channel := workflow.GetSignalChannel(ctx, "addToCart")
+	channel := workflow.GetSignalChannel(ctx, "updateCart")
 	selector := workflow.NewSelector(ctx)
 
 	selector.AddReceive(channel, func(c workflow.ReceiveChannel, _ bool) {
-		var toAdd CartItem
-		c.Receive(ctx, &toAdd)
-		state.Items = append(state.Items, toAdd)
+		var update UpdateCartMessage
+		c.Receive(ctx, &update)
+		if update.Remove {
+			RemoveFromCart(&state, update.Item)
+		} else {
+			AddToCart(&state, update.Item)
+		}
 	})
 
 	for {
@@ -41,4 +49,31 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 	}
 
 	return nil
+}
+
+func AddToCart(state *CartState, item CartItem) {
+	for i := range state.Items {
+		if state.Items[i].ProductId != item.ProductId {
+			continue
+		}
+
+		state.Items[i].Quantity += item.Quantity
+		return
+	}
+
+	state.Items = append(state.Items, item)
+}
+
+func RemoveFromCart(state *CartState, item CartItem) {
+	for i := range state.Items {
+		if state.Items[i].ProductId != item.ProductId {
+			continue
+		}
+
+		state.Items[i].Quantity -= item.Quantity
+		if state.Items[i].Quantity <= 0 {
+			state.Items = append(state.Items[:i], state.Items[i+1:]...)
+		}
+		break
+	}
 }

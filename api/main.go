@@ -16,7 +16,7 @@ import (
 
 type (
 	ErrorResponse struct {
-		Message	string
+		Message string
 	}
 )
 
@@ -36,11 +36,12 @@ func main() {
 	r.Handle("/cart", http.HandlerFunc(CreateCartHandler)).Methods("POST")
 	r.Handle("/cart/{workflowID}/{runID}", http.HandlerFunc(GetCartHandler)).Methods("GET")
 	r.Handle("/cart/{workflowID}/{runID}/add", http.HandlerFunc(AddToCartHandler)).Methods("PUT")
+	r.Handle("/cart/{workflowID}/{runID}/remove", http.HandlerFunc(RemoveFromCartHandler)).Methods("PUT")
 
 	r.NotFoundHandler = http.HandlerFunc(NotFoundHandler)
 
 	http.Handle("/", r)
-	server := httpx.NewServer(":" + HTTPPort, http.DefaultServeMux)
+	server := httpx.NewServer(":"+HTTPPort, http.DefaultServeMux)
 	server.WriteTimeout = time.Second * 240
 
 	err = server.Start()
@@ -99,7 +100,32 @@ func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = temporal.SignalWorkflow(context.Background(), vars["workflowID"], vars["runID"], "addToCart", item)
+	update := app.UpdateCartMessage{Remove: false, Item: item}
+
+	err = temporal.SignalWorkflow(context.Background(), vars["workflowID"], vars["runID"], "updateCart", update)
+	if err != nil {
+		WriteError(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	res := make(map[string]interface{})
+	res["ok"] = 1
+	json.NewEncoder(w).Encode(res)
+}
+
+func RemoveFromCartHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	var item app.CartItem
+	err := json.NewDecoder(r.Body).Decode(&item)
+	if err != nil {
+		WriteError(w, err)
+		return
+	}
+
+	update := app.UpdateCartMessage{Remove: true, Item: item}
+
+	err = temporal.SignalWorkflow(context.Background(), vars["workflowID"], vars["runID"], "updateCart", update)
 	if err != nil {
 		WriteError(w, err)
 		return
