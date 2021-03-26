@@ -12,6 +12,7 @@ type (
 
 	CartState struct {
 		Items []CartItem
+		Email string
 	}
 
 	UpdateCartMessage struct {
