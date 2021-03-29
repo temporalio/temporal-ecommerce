@@ -37,6 +37,7 @@ func main() {
 	}
 
 	r := mux.NewRouter()
+	r.Handle("/products", http.HandlerFunc(GetProductsHandler)).Methods("GET")
 	r.Handle("/cart", http.HandlerFunc(CreateCartHandler)).Methods("POST")
 	r.Handle("/cart/{workflowID}/{runID}", http.HandlerFunc(GetCartHandler)).Methods("GET")
 	r.Handle("/cart/{workflowID}/{runID}/add", http.HandlerFunc(AddToCartHandler)).Methods("PUT")
@@ -53,6 +54,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func GetProductsHandler(w http.ResponseWriter, r *http.Request) {
+	res := make(map[string]interface{})
+	res["products"] = app.Products
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(res)
 }
 
 func CreateCartHandler(w http.ResponseWriter, r *http.Request) {
