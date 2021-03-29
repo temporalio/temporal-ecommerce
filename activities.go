@@ -21,7 +21,7 @@ func CreateStripeCharge(_ context.Context, cart CartState) error {
 	for _, item := range cart.Items {
 		var product Product
 		for _, _product := range Products {
-			if (_product.Id == item.ProductId) {
+			if _product.Id == item.ProductId {
 				product = _product
 				break
 			}
@@ -33,13 +33,17 @@ func CreateStripeCharge(_ context.Context, cart CartState) error {
 		description += product.Name
 	}
 
-	_, err := charge.New(&stripe.ChargeParams {
+	_, err := charge.New(&stripe.ChargeParams{
 		Amount:       stripe.Int64(int64(amount * 100)),
 		Currency:     stripe.String(string(stripe.CurrencyUSD)),
 		Description:  stripe.String(description),
 		Source:       &stripe.SourceParams{Token: stripe.String("tok_visa")},
 		ReceiptEmail: stripe.String(cart.Email),
 	})
+
+	if err != nil {
+		fmt.Println("Stripe err: " + err.Error())
+	}
 
 	return err
 }

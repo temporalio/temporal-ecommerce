@@ -18,6 +18,8 @@ func main() {
 	defer c.Close()
 	// This worker hosts both Worker and Activity functions
 	w := worker.New(c, "CART_TASK_QUEUE", worker.Options{})
+
+	w.RegisterActivity(app.CreateStripeCharge)
 	w.RegisterWorkflow(app.CartWorkflow)
 	// Start listening to the Task Queue
 	err = w.Run(worker.InterruptCh())

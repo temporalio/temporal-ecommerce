@@ -1,7 +1,9 @@
 package app
 
 import (
+	"github.com/mitchellh/mapstructure"
 	"go.temporal.io/sdk/workflow"
+	"time"
 )
 
 type (
@@ -32,21 +34,73 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 		return err
 	}
 
-	channel := workflow.GetSignalChannel(ctx, "updateCart")
+	channel := workflow.GetSignalChannel(ctx, "cartMessages")
 	selector := workflow.NewSelector(ctx)
+	checkedOut := false
 
 	selector.AddReceive(channel, func(c workflow.ReceiveChannel, _ bool) {
-		var update UpdateCartMessage
-		c.Receive(ctx, &update)
-		if update.Remove {
-			RemoveFromCart(&state, update.Item)
-		} else {
-			AddToCart(&state, update.Item)
+		var signal interface{}
+		c.Receive(ctx, &signal)
+
+		var routeSignal RouteSignal
+		err := mapstructure.Decode(signal, &routeSignal)
+		if err != nil {
+			logger.Error("Invalid signal type %v", err)
+			return
+		}
+
+		switch {
+		case routeSignal.Route == RouteTypes.ADD_TO_CART:
+			var message AddToCartSignal
+			err := mapstructure.Decode(signal, &message)
+			if err != nil {
+				logger.Error("Invalid signal type %v", err)
+				return
+			}
+
+			AddToCart(&state, message.Item)
+		case routeSignal.Route == RouteTypes.REMOVE_FROM_CART:
+			var message RemoveFromCartSignal
+			err := mapstructure.Decode(signal, &message)
+			if err != nil {
+				logger.Error("Invalid signal type %v", err)
+				return
+			}
+
+			RemoveFromCart(&state, message.Item)
+		case routeSignal.Route == RouteTypes.CHECKOUT:
+			var message CheckoutSignal
+			err := mapstructure.Decode(signal, &message)
+			if err != nil {
+				logger.Error("Invalid signal type %v", err)
+				return
+			}
+
+			state.Email = message.Email
+
+			ao := workflow.ActivityOptions{
+				ScheduleToStartTimeout: time.Minute,
+				StartToCloseTimeout:    time.Minute,
+			}
+
+			ctx = workflow.WithActivityOptions(ctx, ao)
+
+			err = workflow.ExecuteActivity(ctx, CreateStripeCharge, state).Get(ctx, nil)
+			if err != nil {
+				logger.Error("Invalid signal type %v", err)
+				return
+			}
+
+			checkedOut = true
 		}
 	})
 
 	for {
 		selector.Select(ctx)
+
+		if checkedOut {
+			break
+		}
 	}
 
 	return nil

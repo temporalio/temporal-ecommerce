@@ -40,3 +40,32 @@ var Products = []Product{
 		Price:       599,
 	},
 }
+
+var RouteTypes = struct {
+	ADD_TO_CART      string
+	REMOVE_FROM_CART string
+	CHECKOUT         string
+}{
+	ADD_TO_CART:      "add_to_cart",
+	REMOVE_FROM_CART: "remove_from_cart",
+	CHECKOUT:         "checkout",
+}
+
+type RouteSignal struct {
+	Route string
+}
+
+type AddToCartSignal struct {
+	Route string
+	Item  CartItem
+}
+
+type RemoveFromCartSignal struct {
+	Route string
+	Item  CartItem
+}
+
+type CheckoutSignal struct {
+	Route string
+	Email string
+}
