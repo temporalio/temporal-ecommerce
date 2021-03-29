@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/bojanz/httpx"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"go.temporal.io/sdk/client"
 	"log"
@@ -46,7 +47,9 @@ func main() {
 
 	r.NotFoundHandler = http.HandlerFunc(NotFoundHandler)
 
-	http.Handle("/", r)
+	var cors = handlers.CORS(handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}), handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"}), handlers.AllowedOrigins([]string{"*"}))
+
+	http.Handle("/", cors(r))
 	server := httpx.NewServer(":"+HTTPPort, http.DefaultServeMux)
 	server.WriteTimeout = time.Second * 240
 
