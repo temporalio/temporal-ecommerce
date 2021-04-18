@@ -50,6 +50,10 @@ func main() {
 	var cors = handlers.CORS(handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}), handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"}), handlers.AllowedOrigins([]string{"*"}))
 
 	http.Handle("/", cors(r))
+
+	if HTTPPort == "" {
+		HTTPPort = "3000"
+	}
 	server := httpx.NewServer(":"+HTTPPort, http.DefaultServeMux)
 	server.WriteTimeout = time.Second * 240
 

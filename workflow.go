@@ -35,18 +35,17 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 	}
 
 	channel := workflow.GetSignalChannel(ctx, "cartMessages")
-	selector := workflow.NewSelector(ctx)
 	checkedOut := false
 
-	selector.AddReceive(channel, func(c workflow.ReceiveChannel, _ bool) {
+	for {
 		var signal interface{}
-		c.Receive(ctx, &signal)
+		_ = channel.Receive(ctx, &signal)
 
 		var routeSignal RouteSignal
 		err := mapstructure.Decode(signal, &routeSignal)
 		if err != nil {
 			logger.Error("Invalid signal type %v", err)
-			return
+			continue
 		}
 
 		switch {
@@ -55,7 +54,7 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 			err := mapstructure.Decode(signal, &message)
 			if err != nil {
 				logger.Error("Invalid signal type %v", err)
-				return
+				continue
 			}
 
 			AddToCart(&state, message.Item)
@@ -64,7 +63,7 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 			err := mapstructure.Decode(signal, &message)
 			if err != nil {
 				logger.Error("Invalid signal type %v", err)
-				return
+				continue
 			}
 
 			RemoveFromCart(&state, message.Item)
@@ -73,7 +72,7 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 			err := mapstructure.Decode(signal, &message)
 			if err != nil {
 				logger.Error("Invalid signal type %v", err)
-				return
+				continue
 			}
 
 			state.Email = message.Email
@@ -88,15 +87,11 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 			err = workflow.ExecuteActivity(ctx, CreateStripeCharge, state).Get(ctx, nil)
 			if err != nil {
 				logger.Error("Invalid signal type %v", err)
-				return
+				continue
 			}
 
 			checkedOut = true
 		}
-	})
-
-	for {
-		selector.Select(ctx)
 
 		if checkedOut {
 			break

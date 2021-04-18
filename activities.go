@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/charge"
-	// "go.temporal.io/sdk/activity"
 	"os"
 )
 
 var (
 	stripeKey = os.Getenv("STRIPE_PRIVATE_KEY")
-	// temporal client.Client
 )
 
 func CreateStripeCharge(_ context.Context, cart CartState) error {

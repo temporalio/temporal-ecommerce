@@ -6,10 +6,17 @@ import (
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
 
+	"os"
 	"temporal-ecommerce/app"
 )
 
 func main() {
+	// Check environment variables
+	stripeKey := os.Getenv("STRIPE_PRIVATE_KEY")
+	if stripeKey == "" {
+		panic("Must set STRIPE_PRIVATE_KEY environment variable")
+	}
+
 	// Create the client object just once per process
 	c, err := client.NewClient(client.Options{})
 	if err != nil {
