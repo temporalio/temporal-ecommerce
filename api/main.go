@@ -20,6 +20,10 @@ type (
 		Message string
 	}
 
+	UpdateEmailRequest struct {
+		Email string
+	}
+
 	CheckoutRequest struct {
 		Email string
 	}
@@ -44,6 +48,7 @@ func main() {
 	r.Handle("/cart/{workflowID}/{runID}/add", http.HandlerFunc(AddToCartHandler)).Methods("PUT")
 	r.Handle("/cart/{workflowID}/{runID}/remove", http.HandlerFunc(RemoveFromCartHandler)).Methods("PUT")
 	r.Handle("/cart/{workflowID}/{runID}/checkout", http.HandlerFunc(CheckoutHandler)).Methods("PUT")
+	r.Handle("/cart/{workflowID}/{runID}/email", http.HandlerFunc(UpdateEmailHandler)).Methods("PUT")
 
 	r.NotFoundHandler = http.HandlerFunc(NotFoundHandler)
 
@@ -117,7 +122,7 @@ func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	update := app.AddToCartSignal{Route:app.RouteTypes.ADD_TO_CART, Item: item}
+	update := app.AddToCartSignal{Route: app.RouteTypes.ADD_TO_CART, Item: item}
 
 	err = temporal.SignalWorkflow(context.Background(), vars["workflowID"], vars["runID"], "cartMessages", update)
 	if err != nil {
@@ -140,9 +145,33 @@ func RemoveFromCartHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	update := app.RemoveFromCartSignal{Route:app.RouteTypes.REMOVE_FROM_CART, Item: item}
+	update := app.RemoveFromCartSignal{Route: app.RouteTypes.REMOVE_FROM_CART, Item: item}
 
 	err = temporal.SignalWorkflow(context.Background(), vars["workflowID"], vars["runID"], "cartMessages", update)
+	if err != nil {
+		WriteError(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	res := make(map[string]interface{})
+	res["ok"] = 1
+	json.NewEncoder(w).Encode(res)
+}
+
+func UpdateEmailHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	var body UpdateEmailRequest
+	err := json.NewDecoder(r.Body).Decode(&body)
+	if err != nil {
+		WriteError(w, err)
+		return
+	}
+
+	updateEmail := app.UpdateEmailSignal{Route: app.RouteTypes.UPDATE_EMAIL, Email: body.Email}
+
+	err = temporal.SignalWorkflow(context.Background(), vars["workflowID"], vars["runID"], "cartMessages", updateEmail)
 	if err != nil {
 		WriteError(w, err)
 		return
@@ -164,7 +193,7 @@ func CheckoutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	checkout := app.CheckoutSignal{Route:app.RouteTypes.CHECKOUT, Email: body.Email}
+	checkout := app.CheckoutSignal{Route: app.RouteTypes.CHECKOUT, Email: body.Email}
 
 	err = temporal.SignalWorkflow(context.Background(), vars["workflowID"], vars["runID"], "cartMessages", checkout)
 	if err != nil {

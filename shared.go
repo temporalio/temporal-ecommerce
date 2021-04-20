@@ -44,10 +44,12 @@ var Products = []Product{
 var RouteTypes = struct {
 	ADD_TO_CART      string
 	REMOVE_FROM_CART string
+	UPDATE_EMAIL     string
 	CHECKOUT         string
 }{
 	ADD_TO_CART:      "add_to_cart",
 	REMOVE_FROM_CART: "remove_from_cart",
+	UPDATE_EMAIL:     "update_email",
 	CHECKOUT:         "checkout",
 }
 
@@ -63,6 +65,11 @@ type AddToCartSignal struct {
 type RemoveFromCartSignal struct {
 	Route string
 	Item  CartItem
+}
+
+type UpdateEmailSignal struct {
+	Route string
+	Email string
 }
 
 type CheckoutSignal struct {
