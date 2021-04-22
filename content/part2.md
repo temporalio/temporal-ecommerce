@@ -41,6 +41,7 @@ Checking for an Abandoned Cart
 
 In eCommerce, an [_abandoned_ shopping cart](https://www.optimizely.com/optimization-glossary/shopping-cart-abandonment/#:~:text=Shopping%20cart%20abandonment%20is%20when,process%20before%20completing%20the%20purchase.&text=This%20rate%20will%20identify%20what,don't%20complete%20the%20purchase.) is a shopping cart that has items, but the user hasn't added
 any new items or checked out after a few hours.
+Below is an example abandoned cart email that I recently received with an offer to incentivize checkout.
 
 <img src="https://codebarbarian-images.s3.amazonaws.com/shopping-cart.jpg">
 
@@ -49,6 +50,8 @@ You need to use a job queue like [Celery](https://en.wikipedia.org/wiki/Celery_(
 You need to schedule a job that checks if the cart is abandoned, and reschedule that job every time the cart is updated.
 
 With Temporal, you don't need a separate job queue. Instead, you define a _Selector_ with two event handlers: one that responds to a Workflow signal, and one that responds to a timer.
+By creating a new Selector on each iteration of the `for` loop, you're telling Temporal to handle the next update cart signal it receives, or send an abandoned cart email if it doesn't receive a signal for `abandonedCartTimeout`.
+Calling `Select()` on a selector blocks the Workflow until there's either a signal or `abandonedCartTimeout` elapses.
 
 ```golang
 func CartWorkflow(ctx workflow.Context, state CartState) error {
@@ -78,7 +81,7 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 
     // If the user doesn't update the cart for `abandonedCartTimeout`, send an email
     // reminding them about their cart. Only send the email once.
-		if !sentAbandonedCartEmail {
+		if !sentAbandonedCartEmail && len(state.Items) > 0 {
 			selector.AddFuture(workflow.NewTimer(ctx, abandonedCartTimeout), func(f workflow.Future) {
 				sentAbandonedCartEmail = true
 				ao := workflow.ActivityOptions{
@@ -88,6 +91,7 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 
 				ctx = workflow.WithActivityOptions(ctx, ao)
 
+        // More on SendAbandonedCartEmail in the next section
 				err := workflow.ExecuteActivity(ctx, SendAbandonedCartEmail, state.Email).Get(ctx, nil)
 				if err != nil {
 					logger.Error("Error sending email %v", err)
@@ -102,3 +106,81 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 	return nil
 }
 ```
+
+Temporal Selectors make implementing an abandoned cart email trivial.
+No need to implement a job queue, write a separate worker, or handle rescheduling jobs.
+Just create a new Selector after every signal and use `AddFuture()` to handle the case where the user abandons their cart.
+Temporal does the hard work of persisting and distributing the state of your Workflow for you.
+
+Next up, let's take a closer look at Activities and the `ExecuteActivity()` call above that is responsible for sending the abandoned cart email.
+
+Sending Emails from an Activity
+-------------------------------
+
+You can think of Activities as an abstraction for side effects in Temporal.
+[Workflows should be pure, idempotent functions](https://docs.temporal.io/docs/go-create-workflows/#implementation) to allow Temporal to re-run a Workflow to recreate the Workflow's state.
+Any side effects, like HTTP requests to the [Mailgun API](https://thecodebarbarian.com/sending-emails-using-the-mailgun-api.html), should be in an Activity.
+
+For example, below is the implementation of the `SendAbandonedCartEmail()` function.
+It loads Mailgun keys from environment variables, and sends an HTTP request to the Mailgun API using [Mailgun's official Go library](https://github.com/mailgun/mailgun-go).
+The function takes two parameters: the workflow context, and the email as a string.
+
+```golang
+import (
+	"context"
+	"fmt"
+	"github.com/mailgun/mailgun-go"
+)
+
+var (
+	mailgunDomain = os.Getenv("MAILGUN_DOMAIN")
+	mailgunKey    = os.Getenv("MAILGUN_PRIVATE_KEY")
+)
+
+func SendAbandonedCartEmail(_ context.Context, email string) error {
+	mg := mailgun.NewMailgun(mailgunDomain, mailgunKey)
+	m := mg.NewMessage(
+		"noreply@"+mailgunDomain, // Sender
+		"You've abandoned your shopping cart!", // Subject
+		"Go to http://localhost:8080 to finish checking out!", // Placeholder email copy
+		email, // Recipient
+	)
+	_, _, err := mg.Send(m)
+	if err != nil {
+		fmt.Println("Mailgun err: " + err.Error())
+    return err
+	}
+
+	return err
+}
+```
+
+As a reminder, below is the `ExecuteActivity()` call from the cart Workflow.
+The 3rd parameter to `ExecuteActivity()` becomes the 2nd parameter to `SendAbandonedCartEmail()`:
+
+```golang
+workflow.ExecuteActivity(ctx, SendAbandonedCartEmail, state.Email).Get(ctx, nil)
+```
+
+The `ExecuteActivity()` function also exposes some neat options.
+For example, [Temporal automatically retries failed activities](https://docs.temporal.io/docs/go-retries/), so Temporal would automatically retry the `SendAbandonedCart()` Activity up to 5 times if `SendAbandonedCart()` returns an error.
+You can configure the number of times Temporal will retry the Activity in case of an error using the `MaximumAttempts` option as shown below.
+
+```golang
+ao := workflow.ActivityOptions{
+	ScheduleToStartTimeout: time.Minute,
+	StartToCloseTimeout:    time.Minute,
+  MaximumAttempts:        3,
+}
+
+ctx = workflow.WithActivityOptions(ctx, ao)
+
+err := workflow.ExecuteActivity(ctx, SendAbandonedCartEmail, state.Email).Get(ctx, nil)
+```
+
+Moving On
+---------
+
+Long-lived Workflows in Temporal are excellent for scheduled tasks.
+You can build durable time-based logic, like checking whether the user hasn't modified their shopping cart for a given period of time, without using a job queue.
+Next up, we'll look at patterns for build RESTful APIs on top of Temporal Workflows.

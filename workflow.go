@@ -111,7 +111,7 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 			}
 		})
 
-		if !sentAbandonedCartEmail {
+		if !sentAbandonedCartEmail && len(state.Items) > 0 {
 			selector.AddFuture(workflow.NewTimer(ctx, abandonedCartTimeout), func(f workflow.Future) {
 				sentAbandonedCartEmail = true
 				ao := workflow.ActivityOptions{
