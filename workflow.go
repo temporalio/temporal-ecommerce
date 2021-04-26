@@ -39,7 +39,7 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 		return err
 	}
 
-	channel := workflow.GetSignalChannel(ctx, "cartMessages")
+	channel := workflow.GetSignalChannel(ctx, SignalChannelName)
 	checkedOut := false
 	sentAbandonedCartEmail := false
 
