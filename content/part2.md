@@ -85,8 +85,7 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 			selector.AddFuture(workflow.NewTimer(ctx, abandonedCartTimeout), func(f workflow.Future) {
 				sentAbandonedCartEmail = true
 				ao := workflow.ActivityOptions{
-					ScheduleToStartTimeout: time.Minute,
-					StartToCloseTimeout:    time.Minute,
+					StartToCloseTimeout:   10 * time.Second,
 				}
 
 				ctx = workflow.WithActivityOptions(ctx, ao)
