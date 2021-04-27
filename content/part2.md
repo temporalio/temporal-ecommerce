@@ -106,9 +106,9 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 }
 ```
 
-Temporal Selectors make implementing an abandoned cart email trivial.
+Temporal's [GO SDK Selectors](https://docs.temporal.io/docs/go/selectors/) make it easy to orchestrate asynchronous signals in workflow logic, like responding to either user input or an abandoned cart timeout.
 No need to implement a job queue, write a separate worker, or handle rescheduling jobs.
-Just create a new Selector after every signal and use `AddFuture()` to handle the case where the user abandons their cart.
+You create a new Selector after every signal and use `AddFuture()` to defer code that needs to happen after the associated timeout is selected.
 Temporal does the hard work of persisting and distributing the state of your Workflow for you.
 
 Next up, let's take a closer look at Activities and the `ExecuteActivity()` call above that is responsible for sending the abandoned cart email.
