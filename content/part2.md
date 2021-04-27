@@ -65,7 +65,7 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 		return err
 	}
 
-	channel := workflow.GetSignalChannel(ctx, "cartMessages"
+	channel := workflow.GetSignalChannel(ctx, "cartMessages")
 	sentAbandonedCartEmail := false
 
 	for {
