@@ -2,7 +2,7 @@ Temporal promises to help you build invincible apps.
 To make this possible, Temporal introduces new design patterns that are very different from the traditional web app architecture.
 
 Instead of API endpoints that talk to a database over the network, your API endpoints instead call in-memory _workflows_ that store state internally.
-Temporal handles persisting the state of your workflows and distributing your workflow between workers as necessary.
+Temporal handles persisting the state of your Workflows and distributing your Workflow between Workers as necessary.
 You as the developer are responsible for implementing workflows and activities as normal Go code, Temporal handles the data persistence and horizontal scaling for you.
 
 In this blog post, I'll show how to build a shopping cart using long-lived workflows. You can find the [full source code for this shopping cart on GitHub](https://github.com/vkarpov15/temporal-ecommerce).
