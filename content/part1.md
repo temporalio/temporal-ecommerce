@@ -5,7 +5,8 @@ Instead of API endpoints that talk to a database over the network, your API endp
 Temporal handles persisting the state of your Workflows and distributing your Workflow between Workers as necessary.
 You as the developer are responsible for implementing workflows and activities as normal Go code, Temporal handles the data persistence and horizontal scaling for you.
 
-In this blog post, I'll show how to build a shopping cart using long-lived workflows. You can find the [full source code for this shopping cart on GitHub](https://github.com/vkarpov15/temporal-ecommerce).
+In this blog post, I'll show how to build a shopping cart using long-lived Workflows.
+You can find the [full source code for this shopping cart on GitHub](https://github.com/vkarpov15/temporal-ecommerce).
 
 ## Shopping Cart Workflow
 
