@@ -1,5 +1,5 @@
 Temporal promises to help you build invincible apps.
-To make this possible, Temporal introduces new design patterns that are very different from traditional web app architecture.
+To make this possible, Temporal introduces new design patterns that are very different from the traditional web app architecture.
 
 Instead of API endpoints that talk to a database over the network, your API endpoints instead call in-memory _workflows_ that store state internally.
 Temporal handles persisting the state of your workflows and distributing your workflow between workers as necessary.
