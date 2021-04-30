@@ -132,7 +132,8 @@ export default {
         this.loading = false;
       })
       .catch((err) => {
-        console.log(err);
+        alert('Error fetching products: ' + err);
+        this.loading = false
       });
   },
 };
