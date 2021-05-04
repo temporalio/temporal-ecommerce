@@ -3,7 +3,7 @@ package app
 import (
 	//"errors"
 	"testing"
-	"fmt"
+	//"fmt"
 
 	//"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -40,7 +40,7 @@ func (s *UnitTestSuite) Test_AddToCart() {
 	// s.env.SetTestTimeout(1 * time.Minute)
 
 	s.env.RegisterDelayedCallback(func() {
-		fmt.Println("delayed")
+		// suite.go:63: test panicked: runtime error: invalid memory address or nil pointer dereference
 		res, err := s.env.QueryWorkflow("getCart")
 		s.NoError(err)
 		err = res.Get(&cart)
@@ -57,6 +57,7 @@ func (s *UnitTestSuite) Test_AddToCart() {
 		s.NoError(err)
 		err = res.Get(&cart)
 		s.NoError(err)
+		// Should fail here:
 		s.Equal(2, len(cart.Items))
 	}, time.Millisecond*0)
 
