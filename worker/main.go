@@ -20,6 +20,7 @@ func main() {
 	w := worker.New(c, "CART_TASK_QUEUE", worker.Options{})
 
 	w.RegisterActivity(app.CreateStripeCharge)
+	w.RegisterActivity(app.SendAbandonedCartEmail)
 	w.RegisterWorkflow(app.CartWorkflow)
 	// Start listening to the Task Queue
 	err = w.Run(worker.InterruptCh())
