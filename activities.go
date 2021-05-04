@@ -6,7 +6,6 @@ import (
 	"github.com/mailgun/mailgun-go"
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/charge"
-	// "go.temporal.io/sdk/activity"
 	"os"
 )
 
