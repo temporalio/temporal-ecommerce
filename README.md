@@ -12,6 +12,14 @@ To run the API server:
 env PORT=3000 go run api/main.go
 ```
 
+You can then run the UI on port 8080:
+
+```
+cd frontend
+npm install
+npm run serve
+```
+
 ## Interacting with the API server with cURL
 
 Here is a guide to the basic routes that you can see and what they expect:
