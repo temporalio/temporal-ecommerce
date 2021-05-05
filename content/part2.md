@@ -1,6 +1,6 @@
-# Building an eCommerce Web App With Temporal, Part 2: Reminder Emails
+# Building an eCommerce web app with Temporal, Part 2: Reminder Emails
 
-In [Part 1](https://gist.github.com/vkarpov15/d0b4d3b1eb8ced160bd68172323eb379#file-part_1-md), you built out a simple shopping cart app using a long-lived Workflow to track the state of the cart.
+In [Part 1](https://gist.github.com/vkarpov15/d0b4d3b1eb8ced160bd68172323eb379#file-part_1-md), you built out a simple shopping cart app using a long-living Workflow to track the state of the cart.
 Instead of storing the cart in a database, Temporal lets you represent the cart as a function invocation, using Signals to update the cart and Queries to get the state of the cart.
 
 ```golang
@@ -32,26 +32,26 @@ func CartWorkflowExample(ctx workflow.Context, state CartState) error {
 }
 ```
 
-The long-lived Workflow pattern doesn't offer any substantial benefits in this simple CRUD app.
-But there are certain tasks that are trivial with the long-lived Workflow pattern that would be much more difficult with a traditional web application.
-For example, let's take a look at implementing an abandoned cart email notification.
+The long-living Workflow pattern doesn't offer any substantial benefits in this simple CRUD app.
+However, some tasks are trivial to handle using the long-living Workflow pattern than in a traditional web application setup.
+As an example, let's take a look at implementing an abandoned cart email notification system.
 
-Checking for an Abandoned Cart
+Checking for an abandoned cart
 ------------------------------
 
 In eCommerce, an [_abandoned_ shopping cart](https://www.optimizely.com/optimization-glossary/shopping-cart-abandonment/#:~:text=Shopping%20cart%20abandonment%20is%20when,process%20before%20completing%20the%20purchase.&text=This%20rate%20will%20identify%20what,don't%20complete%20the%20purchase.) is a shopping cart that has items, but the user hasn't added
 any new items or checked out after a few hours.
-Below is an example abandoned cart email that I recently received with an offer to incentivize checkout.
+The following is an example of an abandoned cart email that I recently received with an offer to incentivize checkout.
 
 <img src="https://codebarbarian-images.s3.amazonaws.com/shopping-cart.jpg">
 
-With a traditional web app, abandoned cart notifications are tricky.
-You need to use a job queue like [Celery](https://en.wikipedia.org/wiki/Celery_(software\)) in Python or [Machinery](https://github.com/RichardKnop/machinery) in Golang.
-You need to schedule a job that checks if the cart is abandoned, and reschedule that job every time the cart is updated.
+In a traditional web app architecture, abandoned cart notifications are tricky.
+You need to use a job queue like [Celery](https://en.wikipedia.org/wiki/Celery_(software\)) in Python or [Machinery](https://github.com/RichardKnop/machinery) in GoLang.
+Then, you would schedule a job that checks if the cart is abandoned, and reschedule that job every time the cart is updated.
 
-With Temporal, you don't need a separate job queue. Instead, you define a _Selector_ with two event handlers: one that responds to a Workflow signal, and one that responds to a timer.
-By creating a new Selector on each iteration of the `for` loop, you're telling Temporal to handle the next update cart signal it receives, or send an abandoned cart email if it doesn't receive a signal for `abandonedCartTimeout`.
-Calling `Select()` on a selector blocks the Workflow until there's either a signal or `abandonedCartTimeout` elapses.
+With Temporal, you don't need a separate job queue. Instead, you define a _Selector_ with two event handlers: one that responds to a Workflow signal and one that responds to a timer.
+By creating a new Selector on each iteration of the `for` loop, you're telling Temporal to handle the next update cart signal it receives or send an abandoned cart email if it doesn't receive a signal for `abandonedCartTimeout`.
+Calling `Select()` on a Selector blocks the Workflow until there's either a signal or `abandonedCartTimeout` elapses.
 
 ```golang
 func CartWorkflow(ctx workflow.Context, state CartState) error {
@@ -69,7 +69,7 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 	sentAbandonedCartEmail := false
 
 	for {
-    // Create a new selector on each iteration of the loop means Temporal will pick the first
+    // Create a new Selector on each iteration of the loop means Temporal will pick the first
     // event that occurs each time: either receiving a signal, or responding to the timer.
 		selector := workflow.NewSelector(ctx)
 		selector.AddReceive(channel, func(c workflow.ReceiveChannel, _ bool) {
@@ -106,23 +106,23 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 }
 ```
 
-Temporal's [GO SDK Selectors](https://docs.temporal.io/docs/go/selectors/) make it easy to orchestrate asynchronous signals in workflow logic, like responding to either user input or an abandoned cart timeout.
-No need to implement a job queue, write a separate worker, or handle rescheduling jobs.
-You create a new Selector after every signal and use `AddFuture()` to defer code that needs to happen after the associated timeout is selected.
+Temporal's [GO SDK Selectors](https://docs.temporal.io/docs/go/selectors/) make it easy to orchestrate asynchronous signals in the Workflow logic, like responding to either user input or an abandoned cart timeout.
+You do not need to implement a job queue, write a separate worker, or handle rescheduling jobs.
+All you need to do is create a new Selector after every signal and use `AddFuture()` to defer code that needs to happen after the associated timeout is selected.
 Temporal does the hard work of persisting and distributing the state of your Workflow for you.
 
-Next up, let's take a closer look at Activities and the `ExecuteActivity()` call above that is responsible for sending the abandoned cart email.
+Next, let's take a closer look at Activities and the `ExecuteActivity()` call above that is responsible for sending the abandoned cart email.
 
-Sending Emails from an Activity
+Sending emails from an Activity
 -------------------------------
 
 You can think of Activities as an abstraction for side effects in Temporal.
 [Workflows should be pure, idempotent functions](https://docs.temporal.io/docs/go-create-workflows/#implementation) to allow Temporal to re-run a Workflow to recreate the Workflow's state.
 Any side effects, like HTTP requests to the [Mailgun API](https://thecodebarbarian.com/sending-emails-using-the-mailgun-api.html), should be in an Activity.
 
-For example, below is the implementation of the `SendAbandonedCartEmail()` function.
-It loads Mailgun keys from environment variables, and sends an HTTP request to the Mailgun API using [Mailgun's official Go library](https://github.com/mailgun/mailgun-go).
-The function takes two parameters: the workflow context, and the email as a string.
+For example, the following blob of code contains the implementation of the `SendAbandonedCartEmail()` function.
+It loads Mailgun keys from environment variables and sends an HTTP request to the Mailgun API using [Mailgun's official Go library](https://github.com/mailgun/mailgun-go).
+The function takes two parameters: the Workflow context and the email as a string.
 
 ```golang
 import (
@@ -154,16 +154,16 @@ func SendAbandonedCartEmail(_ context.Context, email string) error {
 }
 ```
 
-As a reminder, below is the `ExecuteActivity()` call from the cart Workflow.
-The 3rd parameter to `ExecuteActivity()` becomes the 2nd parameter to `SendAbandonedCartEmail()`:
+As a reminder, the code below is the `ExecuteActivity()` call from the cart Workflow.
+The third parameter to `ExecuteActivity()` becomes the second parameter to `SendAbandonedCartEmail()`:
 
 ```golang
 workflow.ExecuteActivity(ctx, SendAbandonedCartEmail, state.Email).Get(ctx, nil)
 ```
 
 The `ExecuteActivity()` function also exposes some neat options.
-For example, [Temporal automatically retries failed activities](https://docs.temporal.io/docs/go-retries/), so Temporal would automatically retry the `SendAbandonedCart()` Activity up to 5 times if `SendAbandonedCart()` returns an error.
-You can configure how long Temporal will take to attempt your activity, including a retry policy, with `ScheduleToCloseTimeout`:
+For example, since [Temporal automatically retries failed activities](https://docs.temporal.io/docs/go-retries/), it would automatically retry the `SendAbandonedCart()` Activity for up to 5 times if `SendAbandonedCart()` returns an error.
+You can configure how long Temporal will take while attempting to execute your Activity (including setting a retry policy), with `ScheduleToCloseTimeout`:
 
 ```golang
 ao := workflow.ActivityOptions{
@@ -182,9 +182,9 @@ ctx = workflow.WithActivityOptions(ctx, ao)
 err := workflow.ExecuteActivity(ctx, SendAbandonedCartEmail, state.Email).Get(ctx, nil)
 ```
 
-Moving On
+Moving on
 ---------
 
-Long-lived Workflows in Temporal are excellent for scheduled tasks.
-You can build durable time-based logic, like checking whether the user hasn't modified their shopping cart for a given period of time, without using a job queue.
-Next up, we'll look at patterns for building RESTful APIs on top of Temporal Workflows.
+Long-living Workflows in Temporal are excellent for scheduled tasks.
+You can build durable time-based logic, like checking whether the user hasn't modified their shopping cart for a given period of time without using a job queue.
+In the next post, we'll look at patterns for building RESTful APIs on top of Temporal Workflows.
