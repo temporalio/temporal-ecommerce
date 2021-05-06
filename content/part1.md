@@ -1,6 +1,6 @@
 ## Introduction
 
-Temporal promised to help you build invincible apps.
+Temporal promises to help you build invincible apps.
 To make this possible, we have introduced new design patterns that are very different from the ones used in a traditional web app architecture.
 
 Instead of letting your API endpoints talk to a database over the network, they would instead call in-memory _Workflows_ that store state internally.
