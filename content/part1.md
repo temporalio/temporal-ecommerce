@@ -161,7 +161,7 @@ func main() {
 
 In order to support adding and removing elements from the cart, the Workflow needs to respond to different types of signals.
 Signals let you send arbitrary signals to Workflows.
-The following code listens to a signal channel for messages that either add or remove items from a shopping cart.
+The following code listens to a Signal channel for messages that either add or remove items from a shopping cart.
 
 ```golang
 channel := workflow.GetSignalChannel(ctx, "cartMessages")
