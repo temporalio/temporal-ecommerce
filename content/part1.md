@@ -104,8 +104,7 @@ func main() {
 }
 ```
 
-In order to see this shopping cart Workflow in action, you can create a _starter_ that sends queries and signals
-to modify the shopping cart.
+In order to see this shopping cart Workflow in action, you can create a _starter_ that sends queries and signals to modify the shopping cart.
 
 ```go
 package main
