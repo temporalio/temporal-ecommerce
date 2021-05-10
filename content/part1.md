@@ -73,6 +73,7 @@ To run a Workflow, you need to create a Worker process.
 A Temporal _Worker_ listens for events on a queue and has a list of registered Workflows that it can run in response to messages on the queue.
 Below is the largely-boilerplate `worker/main.go` file:
 
+<!--SNIPSTART worker-->
 ```go
 package main
 
@@ -95,7 +96,9 @@ func main() {
 	// This worker hosts both Worker and Activity functions
 	w := worker.New(c, "CART_TASK_QUEUE", worker.Options{})
 
-	w.RegisterWorkflow(app.CartWorkflowExample)
+	w.RegisterActivity(app.CreateStripeCharge)
+	w.RegisterActivity(app.SendAbandonedCartEmail)
+	w.RegisterWorkflow(app.CartWorkflow)
 	// Start listening to the Task Queue
 	err = w.Run(worker.InterruptCh())
 	if err != nil {
@@ -103,58 +106,12 @@ func main() {
 	}
 }
 ```
+<!--SNIPEND-->
 
 In order to see this shopping cart Workflow in action, you can create a _starter_ that sends queries and signals to modify the shopping cart.
 
-```go
-package main
-
-import (
-	"context"
-	"fmt"
-	"log"
-	"time"
-
-	"temporal-ecommerce/app"
-
-	"go.temporal.io/sdk/client"
-)
-
-func main() {
-	c, err := client.NewClient(client.Options{})
-	if err != nil {
-		log.Fatalln("unable to create Temporal client", err)
-	}
-	defer c.Close()
-
-	workflowID := "CART-" + fmt.Sprintf("%d", time.Now().Unix())
-
-	options := client.StartWorkflowOptions{
-		ID:        workflowID,
-		TaskQueue: "CART_TASK_QUEUE_2",
-	}
-
-	state := app.CartState{Items: make([]app.CartItem, 0)}
-	we, err := c.ExecuteWorkflow(context.Background(), options, app.CartWorkflowExample, state)
-	if err != nil {
-		log.Fatalln("unable to execute workflow", err)
-	}
-
-	err = c.SignalWorkflow(context.Background(), workflowID, we.GetRunID(), "cartMessages", nil)
-
-	resp, err := c.QueryWorkflow(context.Background(), workflowID, we.GetRunID(), "getCart")
-	if err != nil {
-		log.Fatalln("Unable to query workflow", err)
-	}
-	var result interface{}
-	if err := resp.Get(&result); err != nil {
-		log.Fatalln("Unable to decode query result", err)
-	}
-	// Prints a message similar to:
-	// 2021/03/31 15:43:54 Received query result Result map[Email: Items:[map[ProductId:0 Quantity:1]]]
-	log.Println("Received query result", "Result", result)
-}
-```
+<!--SNIPSTART starter-->
+<!--SNIPEND-->
 
 ## Adding and removing elements from the cart
 
@@ -206,7 +163,8 @@ for {
 All the `AddToCart()` and `RemoveFromCart()` functions need to do is modify the `state.Items` array.
 Temporal is responsible for persisting and distributing `state`.
 
-```golang
+<!--SNIPSTART add-and-remove-->
+```go
 func AddToCart(state *CartState, item CartItem) {
 	for i := range state.Items {
 		if state.Items[i].ProductId != item.ProductId {
@@ -234,6 +192,7 @@ func RemoveFromCart(state *CartState, item CartItem) {
 	}
 }
 ```
+<!--SNIPEND-->
 
 ## Next up
 

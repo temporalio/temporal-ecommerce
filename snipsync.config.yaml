@@ -1,0 +1,12 @@
+origins:
+  - files:
+    - ./*.go
+    - ./api/*.go
+    - ./worker/*.go
+    - ./activities.go
+
+targets:
+  - content
+
+features:
+  enable_source_link: false

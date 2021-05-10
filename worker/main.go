@@ -1,3 +1,4 @@
+// @@@SNIPSTART worker
 package main
 
 import (
@@ -28,3 +29,4 @@ func main() {
 		log.Fatalln("unable to start Worker", err)
 	}
 }
+// @@@SNIPEND
