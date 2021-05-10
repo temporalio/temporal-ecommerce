@@ -1,23 +1,26 @@
+## Introduction
+
 Temporal promises to help you build invincible apps.
-To make this possible, Temporal introduces new design patterns that are very different from the traditional web app architecture.
+To make this possible, new design patterns are introduced that are very different from the ones used in a traditional web app architecture.
 
-Instead of API endpoints that talk to a database over the network, your API endpoints instead call in-memory _Workflows_ that store state internally.
-Temporal handles persisting the state of your Workflows and distributing your Workflow between Workers as necessary.
-You as the developer are responsible for implementing [Workflows](https://docs.temporal.io/docs/go/workflows) and [Activities](https://docs.temporal.io/docs/go/activities) as normal Go code, Temporal handles the data persistence and horizontal scaling for you.
+Instead of letting your API endpoints talk to a database over the network, they would instead call in-memory _Workflows_ that store state internally.
+Temporal handles persisting the state of your Workflows and distributes your Workflow between Workers as necessary.
+You, as the developer are responsible for implementing [Workflows](https://docs.temporal.io/docs/go/workflows) and [Activities](https://docs.temporal.io/docs/go/activities) as normal Go code.
+Meanwhile, Temporal handles the data persistence and horizontal scaling for you.
 
-In this blog post, I'll show how to build a shopping cart using long-lived Workflows.
+In this blog post, I'll demonstrate how to build a shopping cart using long-living Workflows.
 You can find the [full source code for this shopping cart on GitHub](https://github.com/vkarpov15/temporal-ecommerce).
 
-## Shopping Cart Workflow
+## Shopping cart Workflow
 
-In traditional web app architecture, a user's shopping cart is stored as a row or document in a database.
-While you can store shopping carts in a separate database using Temporal, you have another option: you can represent a shopping cart as a long-lived Workflow.
+In a traditional web app architecture, a user's shopping cart is stored as a row or document in a database.
+While you can store shopping carts in a separate database using Temporal, you have another option: you can represent a shopping cart as a long-living Workflow.
 
-A workflow is a Go function that takes 2 parameters: a Temporal workflow context `ctx`, and an arbitrary `value`. 
-A workflow can run for an arbitrarily long period of time, and Temporal can handle pausing and restarting the workflow.
-A workflow can then share its state via _queries_ and modify its state in response to _signals_.
+A Workflow is a Go function that takes 2 parameters: a Temporal Workflow context `ctx` and an arbitrary `value`. 
+It can run for an arbitrarily long period of time, as Temporal can handle pausing and restarting the Workflow.
+Lastly, it is able to share its state via _queries_ and modify its state in response to _signals_.
 
-Below is a simplified shopping cart that adds a new product to the cart every time it receives a `updateCart` signal.
+The following is a simplified shopping cart that adds a new product to the cart every time it receives an `updateCart` signal.
 
 ```go
 package app
@@ -66,9 +69,9 @@ func CartWorkflowExample(ctx workflow.Context, state CartState) error {
 }
 ```
 
-To run a workflow, you need to create a worker process.
-A Temporal _worker_ listens for events on a queue and has a list of registered workflows that it can run in response to messages on the queue.
-Below is the largely boilerplate `worker/main.go` file:
+To run a Workflow, you need to create a Worker process.
+A Temporal _Worker_ listens for events on a queue and has a list of registered Workflows that it can run in response to messages on the queue.
+Below is the largely-boilerplate `worker/main.go` file:
 
 ```go
 package main
@@ -101,8 +104,7 @@ func main() {
 }
 ```
 
-In order to see this shopping cart workflow in action, you can create a _starter_ that sends queries and signals
-to modify the shopping cart.
+In order to see this shopping cart Workflow in action, you can create a _starter_ that sends queries and signals to modify the shopping cart.
 
 ```go
 package main
@@ -154,11 +156,11 @@ func main() {
 }
 ```
 
-## Adding and Removing Elements from the Cart
+## Adding and removing elements from the cart
 
-In order to support adding and removing elements from the cart, the workflow needs to respond to different types of signals.
-Signals let you send arbitrary signals to workflows.
-The below code listens to a signal channel for messages that either add or remove items from a shopping cart.
+In order to support adding and removing elements from the cart, the Workflow needs to respond to different types of signals.
+Signals let you send arbitrary signals to Workflows.
+The following code listens to a Signal channel for messages that either add or remove items from a shopping cart.
 
 ```golang
 channel := workflow.GetSignalChannel(ctx, "cartMessages")
@@ -201,8 +203,8 @@ for {
 }
 ```
 
-All the `AddToCart()` functions and `RemoveFromCart()` functions need to do is modify the `state.Items` array.
-Temporal is responsible for persisting and distributing the `state`.
+All the `AddToCart()` and `RemoveFromCart()` functions need to do is modify the `state.Items` array.
+Temporal is responsible for persisting and distributing `state`.
 
 ```golang
 func AddToCart(state *CartState, item CartItem) {
@@ -233,9 +235,9 @@ func RemoveFromCart(state *CartState, item CartItem) {
 }
 ```
 
-## Next Up
+## Next up
 
-Temporal introduces a new way of building web applications: instead of storing a shopping cart in a database, you
-can represent a shopping cart as a long-lived Workflow.
-For simple CRUD applications like this shopping cart app so far, this pattern doesn't make things significantly easier.
-Next up, we'll look at a case where Temporal's long-lived Workflows shine: sending a reminder email if the user abandons their cart.
+Temporal introduces a new way of building web applications; instead of storing a shopping cart in a database, you
+can represent a shopping cart as a long-living Workflow.
+For simple CRUD applications like this shopping cart app, this pattern doesn't really make things significantly easier.
+In the next post, we'll look at a case where Temporal's long-living Workflows shine: sending a reminder email if the user abandons their cart.
