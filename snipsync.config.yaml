@@ -4,6 +4,7 @@ origins:
     - ./api/*.go
     - ./worker/*.go
     - ./activities.go
+    - ./start/*.go
 
 targets:
   - content

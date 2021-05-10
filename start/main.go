@@ -1,4 +1,4 @@
-// @@@SNIPSTART starter
+// @@@SNIPSTART temporal-ecommerce-starter
 package main
 
 import (

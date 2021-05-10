@@ -1,4 +1,4 @@
-// @@@SNIPSTART worker
+// @@@SNIPSTART temporal-ecommerce-worker
 package main
 
 import (
