@@ -159,7 +159,7 @@ func main() {
 ## Adding and removing elements from the cart
 
 In order to support adding and removing elements from the cart, the Workflow needs to respond to different types of signals.
-Signals let you send arbitrary signals to Workflows.
+Signals are a way to notify Workflows of external events.
 The following code listens to a Signal channel for messages that either add or remove items from a shopping cart.
 
 ```golang
@@ -237,7 +237,6 @@ func RemoveFromCart(state *CartState, item CartItem) {
 
 ## Next up
 
-Temporal introduces a new way of building web applications; instead of storing a shopping cart in a database, you
-can represent a shopping cart as a long-living Workflow.
+Temporal introduces a new way of building web applications; instead of storing a shopping cart in a database, you can represent a shopping cart as a long-living Workflow.
 For simple CRUD applications like this shopping cart app, this pattern doesn't really make things significantly easier.
 In the next post, we'll look at a case where Temporal's long-living Workflows shine: sending a reminder email if the user abandons their cart.
