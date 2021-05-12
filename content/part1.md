@@ -73,6 +73,7 @@ To run a Workflow, you need to create a Worker process.
 A Temporal _Worker_ listens for events on a queue and has a list of registered Workflows that it can run in response to messages on the queue.
 Below is the largely-boilerplate `worker/main.go` file:
 
+<!--SNIPSTART temporal-ecommerce-worker-->
 ```go
 package main
 
@@ -95,7 +96,9 @@ func main() {
 	// This worker hosts both Worker and Activity functions
 	w := worker.New(c, "CART_TASK_QUEUE", worker.Options{})
 
-	w.RegisterWorkflow(app.CartWorkflowExample)
+	w.RegisterActivity(app.CreateStripeCharge)
+	w.RegisterActivity(app.SendAbandonedCartEmail)
+	w.RegisterWorkflow(app.CartWorkflow)
 	// Start listening to the Task Queue
 	err = w.Run(worker.InterruptCh())
 	if err != nil {
@@ -103,9 +106,11 @@ func main() {
 	}
 }
 ```
+<!--SNIPEND-->
 
 In order to see this shopping cart Workflow in action, you can create a _starter_ that sends queries and signals to modify the shopping cart.
 
+<!--SNIPSTART temporal-ecommerce-starter-->
 ```go
 package main
 
@@ -131,7 +136,7 @@ func main() {
 
 	options := client.StartWorkflowOptions{
 		ID:        workflowID,
-		TaskQueue: "CART_TASK_QUEUE_2",
+		TaskQueue: "CART_TASK_QUEUE",
 	}
 
 	state := app.CartState{Items: make([]app.CartItem, 0)}
@@ -140,7 +145,7 @@ func main() {
 		log.Fatalln("unable to execute workflow", err)
 	}
 
-	err = c.SignalWorkflow(context.Background(), workflowID, we.GetRunID(), "cartMessages", nil)
+	err = c.SignalWorkflow(context.Background(), workflowID, we.GetRunID(), app.SignalChannelName, nil)
 
 	resp, err := c.QueryWorkflow(context.Background(), workflowID, we.GetRunID(), "getCart")
 	if err != nil {
@@ -155,6 +160,7 @@ func main() {
 	log.Println("Received query result", "Result", result)
 }
 ```
+<!--SNIPEND-->
 
 ## Adding and removing elements from the cart
 
@@ -206,7 +212,8 @@ for {
 All the `AddToCart()` and `RemoveFromCart()` functions need to do is modify the `state.Items` array.
 Temporal is responsible for persisting and distributing `state`.
 
-```golang
+<!--SNIPSTART temporal-ecommerce-add-and-remove-->
+```go
 func AddToCart(state *CartState, item CartItem) {
 	for i := range state.Items {
 		if state.Items[i].ProductId != item.ProductId {
@@ -234,6 +241,7 @@ func RemoveFromCart(state *CartState, item CartItem) {
 	}
 }
 ```
+<!--SNIPEND-->
 
 ## Next up
 
