@@ -29,6 +29,7 @@ var (
 )
 
 func CartWorkflow(ctx workflow.Context, state CartState) error {
+	// https://docs.temporal.io/docs/concepts/workflows/#workflows-have-options
 	logger := workflow.GetLogger(ctx)
 
 	err := workflow.SetQueryHandler(ctx, "getCart", func(input []byte) (CartState, error) {
