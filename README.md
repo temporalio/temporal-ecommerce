@@ -1,5 +1,13 @@
 # temporal-ecommerce
 
+This is a demo app for a blogpost series showing the process of developing a full ecommerce application:
+
+- [Part 1: Getting Started](https://docs.temporal.io/blog/build-an-ecommerce-app-with-temporal-part-1)
+- Part 2: Server (to be published)
+- Part 3: Testing (to be published)
+
+## Instructions
+
 To run the worker, make sure you have a local instance of Temporal Server running (e.g. with [docker-compose](https://github.com/temporalio/docker-compose)), then run:
 
 ```bash
