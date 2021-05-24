@@ -15,7 +15,9 @@ var (
 	mailgunKey    = os.Getenv("MAILGUN_PRIVATE_KEY")
 )
 
-func CreateStripeCharge(_ context.Context, cart CartState) error {
+type Activities struct {}
+
+func (a *Activities) CreateStripeCharge(_ context.Context, cart CartState) error {
 	stripe.Key = stripeKey
 	var amount float32 = 0
 	var description string = ""
@@ -49,7 +51,7 @@ func CreateStripeCharge(_ context.Context, cart CartState) error {
 	return err
 }
 
-func SendAbandonedCartEmail(_ context.Context, email string) error {
+func (a *Activities) SendAbandonedCartEmail(_ context.Context, email string) error {
 	mg := mailgun.NewMailgun(mailgunDomain, mailgunKey)
 	m := mg.NewMessage(
 		"noreply@"+mailgunDomain,

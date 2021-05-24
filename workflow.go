@@ -44,6 +44,8 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 	checkedOut := false
 	sentAbandonedCartEmail := false
 
+	var a *Activities
+
 	for {
 		selector := workflow.NewSelector(ctx)
 		selector.AddReceive(channel, func(c workflow.ReceiveChannel, _ bool) {
@@ -66,7 +68,7 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 					return
 				}
 
-				AddToCart(&state, message.Item)
+				state.AddToCart(message.Item)
 			case routeSignal.Route == RouteTypes.REMOVE_FROM_CART:
 				var message RemoveFromCartSignal
 				err := mapstructure.Decode(signal, &message)
@@ -75,7 +77,7 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 					return
 				}
 
-				RemoveFromCart(&state, message.Item)
+				state.RemoveFromCart(message.Item)
 			case routeSignal.Route == RouteTypes.UPDATE_EMAIL:
 				var message UpdateEmailSignal
 				err := mapstructure.Decode(signal, &message)
@@ -102,7 +104,7 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 
 				ctx = workflow.WithActivityOptions(ctx, ao)
 
-				err = workflow.ExecuteActivity(ctx, CreateStripeCharge, state).Get(ctx, nil)
+				err = workflow.ExecuteActivity(ctx, a.CreateStripeCharge, state).Get(ctx, nil)
 				if err != nil {
 					logger.Error("Invalid signal type %v", err)
 					return
@@ -122,7 +124,7 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 
 				ctx = workflow.WithActivityOptions(ctx, ao)
 
-				err := workflow.ExecuteActivity(ctx, SendAbandonedCartEmail, state.Email).Get(ctx, nil)
+				err := workflow.ExecuteActivity(ctx, a.SendAbandonedCartEmail, state.Email).Get(ctx, nil)
 				if err != nil {
 					logger.Error("Error sending email %v", err)
 					return
@@ -141,7 +143,7 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 }
 
 // @@@SNIPSTART temporal-ecommerce-add-and-remove
-func AddToCart(state *CartState, item CartItem) {
+func (state *CartState) AddToCart(item CartItem) {
 	for i := range state.Items {
 		if state.Items[i].ProductId != item.ProductId {
 			continue
@@ -154,7 +156,7 @@ func AddToCart(state *CartState, item CartItem) {
 	state.Items = append(state.Items, item)
 }
 
-func RemoveFromCart(state *CartState, item CartItem) {
+func (state *CartState) RemoveFromCart(item CartItem) {
 	for i := range state.Items {
 		if state.Items[i].ProductId != item.ProductId {
 			continue
