@@ -2,7 +2,9 @@
 
 In [Part 1](https://github.com/temporalio/temporal-ecommerce/blob/main/content/part1.md) and [Part 2](https://github.com/temporalio/temporal-ecommerce/blob/main/content/part2.md), you built out a shopping cart with an abandoned cart email notification using long-lived Workflows.
 Using Workflows and Activities, you can easily build features that would be tricky in a traditional RESTful API, like sending an email reminder when a user hasn't touched their cart in a while.
-Temporal Workflows do more than make working with time easy, they also make it easier to test Workflows that depend on time.
+
+Temporal Workflows do more than make working with time easy, they also make your code easier to test.
+Temporal provides testing utilities that help you stub out external services and programmatically advance time, which lets you [unit test your Workflows](https://docs.temporal.io/blog/descript-case-study/#to-code-or-not-to-code).
 In this blog post, I'll demonstrate how to use Temporal's testing utilities to write fast unit tests for the shopping cart from Part 1 and Part 2.
 
 ## Testing Setup
