@@ -50,7 +50,7 @@ func TestUnitTestSuite(t *testing.T) {
 The most important property is the `env` property, which is an instance of [Temporal's `TestWorkflowEnvironment` struct](https://pkg.go.dev/go.temporal.io/temporal/internal#TestWorkflowEnvironment).
 A `TestWorkflowEnvironment` provides utilities for testing Workflows, including executing Workflows, mocking Activities, and signaling and querying test Workflows.
 
-## Querying and Signaling Workflows
+## Querying Workflows in tests
 
 Remember that, in this app, a shopping cart is a Workflow.
 To get the current state of the shopping cart, you send a query to the Workflow, and to update the cart you send a signal to the Workflow.
