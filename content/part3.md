@@ -144,6 +144,7 @@ func (s *UnitTestSuite) Test_AddToCart() {
 	s.True(s.env.IsWorkflowCompleted())
 }
 ```
+### Sending multiple signals to Workflows in tests
 
 Similarly, if you want to send multiple signals, you should put them in separate `RegisterDelayedCallback()` calls.
 However, you can move any queries that don't have any signals after them to after the `ExecuteWorkflow()` call.
