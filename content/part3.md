@@ -100,6 +100,9 @@ func (s *UnitTestSuite) Test_IntermediateQuery() {
 ```
 
 You can query a Workflow after it is completed, but you can't signal a Workflow after it is completed.
+
+## Signaling Workflows in tests
+
 So in order to signal a Workflow from your tests, you need to use `RegisterDelayedCallback()`.
 Just remember that signaling is asynchronous, so you need to add a separate `RegisterDelayedCallback()` to read the result of your signal using a query.
 For example, below is a test case for the `AddToCart()` method.
