@@ -9,21 +9,13 @@ import (
 )
 
 type Activities struct {
-	stripeKey string
-	mailgunDomain string
-	mailgunKey string
-}
-
-func MakeActivities(stripeKey string, mailgunDomain string, mailgunKey string) (*Activities) {
-	return &Activities{
-		stripeKey: stripeKey,
-		mailgunDomain: mailgunDomain,
-		mailgunKey: mailgunKey,
-	}
+	StripeKey string
+	MailgunDomain string
+	MailgunKey string
 }
 
 func (a *Activities) CreateStripeCharge(_ context.Context, cart CartState) error {
-	stripe.Key = a.stripeKey
+	stripe.Key = a.StripeKey
 	var amount float32 = 0
 	var description string = ""
 	for _, item := range cart.Items {
@@ -57,9 +49,9 @@ func (a *Activities) CreateStripeCharge(_ context.Context, cart CartState) error
 }
 
 func (a *Activities) SendAbandonedCartEmail(_ context.Context, email string) error {
-	mg := mailgun.NewMailgun(a.mailgunDomain, a.mailgunKey)
+	mg := mailgun.NewMailgun(a.MailgunDomain, a.MailgunKey)
 	m := mg.NewMessage(
-		"noreply@"+a.mailgunDomain,
+		"noreply@"+a.MailgunDomain,
 		"You've abandoned your shopping cart!",
 		"Go to http://localhost:8080 to finish checking out!",
 		email,

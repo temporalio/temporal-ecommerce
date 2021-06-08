@@ -25,7 +25,11 @@ func main() {
 	// This worker hosts both Worker and Activity functions
 	w := worker.New(c, "CART_TASK_QUEUE", worker.Options{})
 
-	a := app.MakeActivities(stripeKey, mailgunDomain, mailgunKey)
+	a := &app.Activities{
+		StripeKey: stripeKey,
+		MailgunDomain: mailgunDomain,
+		MailgunKey: mailgunKey,
+	}
 
 	w.RegisterActivity(a.CreateStripeCharge)
 	w.RegisterActivity(a.SendAbandonedCartEmail)

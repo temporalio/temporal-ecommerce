@@ -86,7 +86,7 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 			selector.AddFuture(workflow.NewTimer(ctx, abandonedCartTimeout), func(f workflow.Future) {
 				sentAbandonedCartEmail = true
 				ao := workflow.ActivityOptions{
-					ScheduleToCloseTimeout: time.Minute,
+					StartToCloseTimeout: time.Minute,
 				}
 
 				ctx = workflow.WithActivityOptions(ctx, ao)
@@ -168,7 +168,7 @@ You can configure how long Temporal will take while attempting to execute your A
 
 ```golang
 ao := workflow.ActivityOptions{
-	ScheduleToCloseTimeout: time.Minute,
+	ScheduleToCloseTimeout: 5*time.Minute,
 	RetryPolicy: &temporal.RetryPolicy{
 	  InitialInterval:    time.Second,
 	  BackoffCoefficient: 2.0,
