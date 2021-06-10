@@ -3,7 +3,7 @@
 This is a demo app for a blogpost series showing the process of developing a full ecommerce application:
 
 - [Part 1: Getting Started](https://docs.temporal.io/blog/build-an-ecommerce-app-with-temporal-part-1)
-- Part 2: Server (to be published)
+- [Part 2: Reminder Emails](https://docs.temporal.io/blog/build-an-ecommerce-app-with-temporal-part-2-reminder-emails)
 - Part 3: Testing (to be published)
 
 ## Instructions
