@@ -27,7 +27,7 @@ func main() {
 	}
 
 	state := app.CartState{Items: make([]app.CartItem, 0)}
-	we, err := c.ExecuteWorkflow(context.Background(), options, app.CartWorkflowExample, state)
+	we, err := c.ExecuteWorkflow(context.Background(), options, app.CartWorkflow, state)
 	if err != nil {
 		log.Fatalln("unable to execute workflow", err)
 	}
