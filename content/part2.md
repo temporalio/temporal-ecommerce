@@ -33,7 +33,7 @@ func CartWorkflowExample(ctx workflow.Context, state CartState) error {
 ```
 
 The long-living Workflow pattern doesn't offer any substantial benefits in this simple CRUD app.
-However, some tasks are trivial to handle using the long-living Workflow pattern than in a traditional web application setup.
+However, some tasks are much easier with the long-living Workflow pattern than with a traditional web application setup.
 As an example, let's take a look at implementing an abandoned cart email notification system.
 
 Checking for an abandoned cart
@@ -46,7 +46,7 @@ The following is an example of an abandoned cart email that I recently received 
 <img src="https://codebarbarian-images.s3.amazonaws.com/shopping-cart.jpg">
 
 In a traditional web app architecture, abandoned cart notifications are tricky.
-You need to use a job queue like [Celery](https://en.wikipedia.org/wiki/Celery_(software\)) in Python or [Machinery](https://github.com/RichardKnop/machinery) in GoLang.
+You need to use a job queue like [Celery](https://docs.celeryproject.org/en/stable/) in Python or [Machinery](https://github.com/RichardKnop/machinery) in Go.
 Then, you would schedule a job that checks if the cart is abandoned, and reschedule that job every time the cart is updated.
 
 With Temporal, you don't need a separate job queue. Instead, you define a _Selector_ with two event handlers: one that responds to a Workflow signal and one that responds to a timer.
@@ -69,8 +69,9 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 	sentAbandonedCartEmail := false
 
 	for {
-    // Create a new Selector on each iteration of the loop means Temporal will pick the first
-    // event that occurs each time: either receiving a signal, or responding to the timer.
+    // Create a new Selector on each iteration of the loop means Temporal will wait up
+		// to `abandonedCartTimeout` to receive a signal, otherwise it will trigger the
+		// `SendAbandonedCartEmail` activity.
 		selector := workflow.NewSelector(ctx)
 		selector.AddReceive(channel, func(c workflow.ReceiveChannel, _ bool) {
 			var signal interface{}
@@ -85,7 +86,7 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 			selector.AddFuture(workflow.NewTimer(ctx, abandonedCartTimeout), func(f workflow.Future) {
 				sentAbandonedCartEmail = true
 				ao := workflow.ActivityOptions{
-					StartToCloseTimeout:   10 * time.Second,
+					StartToCloseTimeout: time.Minute,
 				}
 
 				ctx = workflow.WithActivityOptions(ctx, ao)
@@ -167,8 +168,7 @@ You can configure how long Temporal will take while attempting to execute your A
 
 ```golang
 ao := workflow.ActivityOptions{
-	StartToCloseTimeout: time.Minute * 5,
-	ScheduleToCloseTimeout: time.Minute,
+	ScheduleToCloseTimeout: 5*time.Minute,
 	RetryPolicy: &temporal.RetryPolicy{
 	  InitialInterval:    time.Second,
 	  BackoffCoefficient: 2.0,

@@ -98,8 +98,7 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 				state.Email = message.Email
 
 				ao := workflow.ActivityOptions{
-					ScheduleToStartTimeout: time.Minute,
-					StartToCloseTimeout:    time.Minute,
+					StartToCloseTimeout: time.Minute,
 				}
 
 				ctx = workflow.WithActivityOptions(ctx, ao)
@@ -118,8 +117,7 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 			selector.AddFuture(workflow.NewTimer(ctx, abandonedCartTimeout), func(f workflow.Future) {
 				sentAbandonedCartEmail = true
 				ao := workflow.ActivityOptions{
-					ScheduleToStartTimeout: time.Minute,
-					StartToCloseTimeout:    time.Minute,
+					StartToCloseTimeout: time.Minute,
 				}
 
 				ctx = workflow.WithActivityOptions(ctx, ao)

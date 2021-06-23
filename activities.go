@@ -6,19 +6,16 @@ import (
 	"github.com/mailgun/mailgun-go"
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/charge"
-	"os"
 )
 
-var (
-	stripeKey     = os.Getenv("STRIPE_PRIVATE_KEY")
-	mailgunDomain = os.Getenv("MAILGUN_DOMAIN")
-	mailgunKey    = os.Getenv("MAILGUN_PRIVATE_KEY")
-)
-
-type Activities struct {}
+type Activities struct {
+	StripeKey string
+	MailgunDomain string
+	MailgunKey string
+}
 
 func (a *Activities) CreateStripeCharge(_ context.Context, cart CartState) error {
-	stripe.Key = stripeKey
+	stripe.Key = a.StripeKey
 	var amount float32 = 0
 	var description string = ""
 	for _, item := range cart.Items {
@@ -52,9 +49,9 @@ func (a *Activities) CreateStripeCharge(_ context.Context, cart CartState) error
 }
 
 func (a *Activities) SendAbandonedCartEmail(_ context.Context, email string) error {
-	mg := mailgun.NewMailgun(mailgunDomain, mailgunKey)
+	mg := mailgun.NewMailgun(a.MailgunDomain, a.MailgunKey)
 	m := mg.NewMessage(
-		"noreply@"+mailgunDomain,
+		"noreply@"+a.MailgunDomain,
 		"You've abandoned your shopping cart!",
 		"Go to http://localhost:8080 to finish checking out!",
 		email,
