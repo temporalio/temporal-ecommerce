@@ -37,6 +37,9 @@ type UnitTestSuite struct {
 }
 
 func (s *UnitTestSuite) SetupTest() {
+	// You are responsible for calling `NewTestWorkflowEnvironment()` to initialize
+	// Temporal's testing utilities, but you can also add any other setup you need
+	// in this function.
 	s.env = s.NewTestWorkflowEnvironment()
 }
 
@@ -51,6 +54,41 @@ func TestUnitTestSuite(t *testing.T) {
 
 The most important property is the `env` property, which is an instance of [Temporal's `TestWorkflowEnvironment` struct](https://pkg.go.dev/go.temporal.io/temporal/internal#TestWorkflowEnvironment).
 A `TestWorkflowEnvironment` provides utilities for testing Workflows, including executing Workflows, mocking Activities, and signaling and querying test Workflows.
+
+The [testify package](https://github.com/stretchr/testify) also provides utilities for organizing tests, including setting up and tearing down test suites using `SetupTest()` and `AfterTest()`.
+For example, you can define multiple test suites as shown below.
+
+```go
+type UnitTestSuite struct {
+	suite.Suite
+	testsuite.WorkflowTestSuite
+
+	env *testsuite.TestWorkflowEnvironment
+}
+
+func (s *UnitTestSuite) SetupTest() {
+	s.env = s.NewTestWorkflowEnvironment()
+}
+
+func (s *UnitTestSuite) AfterTest(suiteName, testName string) {
+	s.env.AssertExpectations(s.T())
+}
+
+type IntegrationTestSuite struct {
+	suite.Suite
+	testsuite.WorkflowTestSuite
+
+	env *testsuite.TestWorkflowEnvironment
+}
+
+func (s *IntegrationTestSuite) SetupTest() {
+	s.env = s.NewTestWorkflowEnvironment()
+}
+
+func (s *IntegrationTestSuite) AfterTest(suiteName, testName string) {
+	s.env.AssertExpectations(s.T())
+}
+```
 
 ## Querying Workflows in tests
 
