@@ -187,4 +187,4 @@ Moving on
 
 Long-living Workflows in Temporal are excellent for scheduled tasks.
 You can build durable time-based logic, like checking whether the user hasn't modified their shopping cart for a given period of time without using a job queue.
-In the next post, we'll look at patterns for building RESTful APIs on top of Temporal Workflows.
+In the next post, we'll look at patterns for unit testing Temporal Workflows.
