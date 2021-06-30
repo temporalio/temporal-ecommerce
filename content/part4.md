@@ -1,0 +1,199 @@
+# Building an eCommerce web app with Temporal, Part 4: REST API
+
+In [Part 1](https://docs.temporal.io/blog/build-an-ecommerce-app-with-temporal-part-1/), [Part 2](https://docs.temporal.io/blog/build-an-ecommerce-app-with-temporal-part-2-reminder-emails/), and [Part 3](https://github.com/temporalio/temporal-ecommerce/blob/main/content/part3.md), you built and tested a shopping cart with an abandoned cart email notification using long-lived Workflows.
+Workflows, Activities, and Temporal's testing utilities make it easy to build and maintain features that involve external services and time, like sending an email reminder when a user hasn't touched their cart in a while.
+
+Thus far, you've only worked with the Temporal SDK via starters and unit tests, which invoke the Temporal SDK directly.
+In this blog post, I'll demonstrate how you can build a RESTful API on top of Temporal Workflows, so you can create web apps and mobile apps that store data in Temporal.
+
+## API Setup
+
+For this tutorial, I'll be using [httpx](github.com/bojanz/httpx) along with [mux](https://github.com/gorilla/mux) for routing and [handlers](https://github.com/gorilla/handlers) for CORS.
+
+```go
+package main
+
+import (
+	"context"
+	"github.com/bojanz/httpx"
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
+	"net/http"
+	"os"
+)
+
+func main() {
+	var err error
+
+  // Set up CORS for frontend
+	var cors = handlers.CORS(handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}), handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"}), handlers.AllowedOrigins([]string{"*"}))
+
+	http.Handle("/", cors(r))
+	server := httpx.NewServer(":"+HTTPPort, http.DefaultServeMux)
+	server.WriteTimeout = time.Second * 240
+
+	err = server.Start()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+The API endpoints will use [Temporal Client methods](https://docs.temporal.io/docs/go/workflows#how-to-start-a-workflow) to create Workflows, and execute Signals and Queries.
+In general, HTTP GET requests execute Queries, HTTP PUT or PATCH requests send Signals, and HTTP POST requests create new Workflows.
+
+```go
+// Create a new cart
+r.Handle("/cart", http.HandlerFunc(CreateCartHandler)).Methods("POST")
+// Get the state of an existing cart
+r.Handle("/cart/{workflowID}/{runID}", http.HandlerFunc(GetCartHandler)).Methods("GET")
+
+// Add a new item to the cart
+r.Handle("/cart/{workflowID}/{runID}/add", http.HandlerFunc(AddToCartHandler)).Methods("PUT")
+// Remove an item from the cart
+r.Handle("/cart/{workflowID}/{runID}/remove", http.HandlerFunc(RemoveFromCartHandler)).Methods("PUT")
+// Update the cart's associated email address
+r.Handle("/cart/{workflowID}/{runID}/email", http.HandlerFunc(UpdateEmailHandler)).Methods("PUT")
+// Check out
+r.Handle("/cart/{workflowID}/{runID}/checkout", http.HandlerFunc(CheckoutHandler)).Methods("PUT")
+```
+
+In this case, the API server and the [Worker](https://docs.temporal.io/docs/go/workers) are separate processes.
+The API server is just an intermediary between the Temporal server and your API server's clients.
+The carts themselves are stored in the Temporal server and in the Worker process.
+
+## Handler Functions
+
+First, let's take a look at the `POST /cart` endpoint. Since we've chosen to represent an individual shopping cart as a Workflow, the `CreateCartHandler()` function will create a new Workflow using `ExecuteWorkflow()`.
+You are responsible for making sure each `POST /cart` call creates a Workflow creates a unique `workflowID`.
+[Temporal treats a Workflow with the same ID as a prior Workflow as a continuation of the prior Workflow](https://docs.temporal.io/docs/shared/continue-as-new).
+
+```go
+func CreateCartHandler(w http.ResponseWriter, r *http.Request) {
+  // In production you should use uuids or something similar, but the
+  // current time is enough for this example. Make sure the Workflow ID
+  // is unique every time the user creates a new cart!
+	workflowID := "CART-" + fmt.Sprintf("%d", time.Now().Unix())
+
+	options := client.StartWorkflowOptions{
+		ID:        workflowID,
+		TaskQueue: "CART_TASK_QUEUE",
+	}
+
+	cart := app.CartState{Items: make([]app.CartItem, 0)}
+	we, err := temporal.ExecuteWorkflow(context.Background(), options, app.CartWorkflow, cart)
+	if err != nil {
+		WriteError(w, err)
+		return
+	}
+
+  // Return the `workflowID` and `runID` so clients can use them with other endpoints
+	res := make(map[string]interface{})
+	res["cart"] = cart
+	res["workflowID"] = we.GetID()
+	res["runID"] = we.GetRunID()
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(res)
+}
+```
+
+Now you have a `POST /cart` endpoint that creates a new empty cart, and returns the `workflowID` and `runID` that uniquely identify this Workflow.
+Even though `workflowID` is unique in this case, you still need to provide `runID` in order to Query or Signal the cart Workflow.
+The next endpoint is `GET /cart/{workflowID}/{runID}`, which returns the current state of the cart with the given `WorkflowID` and `runID`.
+Below is the `GetCartHandler()` function, which gets the `workflowID` and `runID` from the URL and executes a Query for the current state of the cart.
+
+```go
+func GetCartHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	response, err := temporal.QueryWorkflow(context.Background(), vars["workflowID"], vars["runID"], "getCart")
+	if err != nil {
+		WriteError(w, err)
+		return
+	}
+	var res interface{}
+	if err := response.Get(&res); err != nil {
+		WriteError(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(res)
+}
+```
+
+## PUT Requests and Signals
+
+HTTP PUT requests usually correspond to Temporal Signals.
+That means, in addition to the `workflowID` and `runID`, you need to send Signal arguments.
+Remember that `shared.go` contains an [`AddToCartSignal` struct](https://github.com/temporalio/temporal-ecommerce/blob/5c4e0142e3571398d972c80b3fa7cdbe7a5db42b/shared.go#L64-L67) that is what the [cart Workflow's Signal handler expects](https://github.com/temporalio/temporal-ecommerce/blob/main/workflow.go#L52-L71):
+
+```go
+type AddToCartSignal struct {
+	Route string
+	Item  CartItem
+}
+```
+
+The `PUT /cart/{workflowID}/{runID}/add` handler needs to convert the HTTP request body into an `AddToCartSignal` as shown below.
+
+```go
+func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	var item app.CartItem
+	err := json.NewDecoder(r.Body).Decode(&item)
+	if err != nil {
+		WriteError(w, err)
+		return
+	}
+
+	update := app.AddToCartSignal{Route: app.RouteTypes.ADD_TO_CART, Item: item}
+
+	err = temporal.SignalWorkflow(context.Background(), vars["workflowID"], vars["runID"], app.SignalChannelName, update)
+	if err != nil {
+		WriteError(w, err)
+		return
+	}
+
+  // Signals don't return a response, so assume that if the Signal went through
+  // then the request succeeded.
+	w.WriteHeader(http.StatusOK)
+	res := make(map[string]interface{})
+	res["ok"] = 1
+	json.NewEncoder(w).Encode(res)
+}
+```
+
+The `PUT /cart/{workflowID}/{runID}/remove` and `PUT /cart/{workflowID}/{runID}/email` handlers are almost identical, except they send `RemoveFromCartSignal` and `UpdateEmailSignal`, not `AddToCartSignal`.
+
+```go
+func UpdateEmailHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	var body UpdateEmailRequest
+	err := json.NewDecoder(r.Body).Decode(&body)
+	if err != nil {
+		WriteError(w, err)
+		return
+	}
+
+	updateEmail := app.UpdateEmailSignal{Route: app.RouteTypes.UPDATE_EMAIL, Email: body.Email}
+
+	err = temporal.SignalWorkflow(context.Background(), vars["workflowID"], vars["runID"], app.SignalChannelName, updateEmail)
+	if err != nil {
+		WriteError(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	res := make(map[string]interface{})
+	res["ok"] = 1
+	json.NewEncoder(w).Encode(res)
+}
+```
+
+## Moving On
+
+You can build a RESTful API on top of Temporal by making HTTP POST requests create Workflows, GET requests execute Queries, and PUT requests execute Signals.
+This isn't the only way you can build a RESTful API with Temporal, but this pattern works well if you use long-lived Workflows to store user data.
+Because all of the work of updating your shopping cart happens in the Worker process, you can scale your API servers independently of your Worker processes, and rely on the Temporal server to handle the distributed computing.
