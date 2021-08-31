@@ -154,7 +154,7 @@ func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-  // Signals don't return a response, so assume that if the Signal went through
+  // Signals don't return a response, so if the Signal went through
   // then the request succeeded.
 	w.WriteHeader(http.StatusOK)
 	res := make(map[string]interface{})
