@@ -125,7 +125,7 @@ func GetCartHandler(w http.ResponseWriter, r *http.Request) {
 
 For this app, HTTP PUT requests correspond to Temporal Signals.
 That means, in addition to the `workflowID` and `runID`, you need to send Signal arguments.
-Remember that `shared.go` contains an [`AddToCartSignal` struct](https://github.com/temporalio/temporal-ecommerce/blob/5c4e0142e3571398d972c80b3fa7cdbe7a5db42b/shared.go#L64-L67) that is what the [cart Workflow's Signal handler expects](https://github.com/temporalio/temporal-ecommerce/blob/main/workflow.go#L52-L71):
+Remember that `shared.go` contains an [`AddToCartSignal` struct](https://github.com/temporalio/temporal-ecommerce/blob/5c4e0142e3571398d972c80b3fa7cdbe7a5db42b/shared.go#L64-L67) which is what the [cart Workflow's Signal handler expects](https://github.com/temporalio/temporal-ecommerce/blob/main/workflow.go#L52-L71):
 
 ```go
 type AddToCartSignal struct {
