@@ -25,7 +25,7 @@ import (
 func main() {
 	var err error
 
-  // Set up CORS for frontend
+	// Set up CORS for frontend
 	var cors = handlers.CORS(handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}), handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"}), handlers.AllowedOrigins([]string{"*"}))
 
 	http.Handle("/", cors(r))
@@ -60,13 +60,12 @@ r.Handle("/cart/{workflowID}/{runID}/checkout", http.HandlerFunc(CheckoutHandler
 
 In this case, the API server and the [Worker](https://docs.temporal.io/docs/go/workers) are separate processes.
 The API server is just an intermediary between the Temporal server and your API server's clients.
-The carts themselves are stored in the Temporal server and in the Worker process.
+The event history representing the cart is stored in the Temporal server.
 
 ## Handler Functions
 
 First, let's take a look at the `POST /cart` endpoint. Since we've chosen to represent an individual shopping cart as a Workflow, the `CreateCartHandler()` function will create a new Workflow using `ExecuteWorkflow()`.
-You are responsible for making sure each `POST /cart` call creates a Workflow creates a unique `workflowID`.
-[Temporal treats a Workflow with the same ID as a prior Workflow as a continuation of the prior Workflow](https://docs.temporal.io/docs/shared/continue-as-new).
+For the purposes of this app, we need to make sure each `POST /cart` call creates a Workflow creates a unique `workflowID`.
 
 ```go
 func CreateCartHandler(w http.ResponseWriter, r *http.Request) {
@@ -99,7 +98,6 @@ func CreateCartHandler(w http.ResponseWriter, r *http.Request) {
 ```
 
 Now you have a `POST /cart` endpoint that creates a new empty cart, and returns the `workflowID` and `runID` that uniquely identify this Workflow.
-Even though `workflowID` is unique in this case, you still need to provide `runID` in order to Query or Signal the cart Workflow.
 The next endpoint is `GET /cart/{workflowID}/{runID}`, which returns the current state of the cart with the given `WorkflowID` and `runID`.
 Below is the `GetCartHandler()` function, which gets the `workflowID` and `runID` from the URL and executes a Query for the current state of the cart.
 
@@ -124,7 +122,7 @@ func GetCartHandler(w http.ResponseWriter, r *http.Request) {
 
 ## PUT Requests and Signals
 
-HTTP PUT requests usually correspond to Temporal Signals.
+For this app, HTTP PUT requests correspond to Temporal Signals.
 That means, in addition to the `workflowID` and `runID`, you need to send Signal arguments.
 Remember that `shared.go` contains an [`AddToCartSignal` struct](https://github.com/temporalio/temporal-ecommerce/blob/5c4e0142e3571398d972c80b3fa7cdbe7a5db42b/shared.go#L64-L67) that is what the [cart Workflow's Signal handler expects](https://github.com/temporalio/temporal-ecommerce/blob/main/workflow.go#L52-L71):
 
