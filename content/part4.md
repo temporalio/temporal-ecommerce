@@ -98,6 +98,7 @@ func CreateCartHandler(w http.ResponseWriter, r *http.Request) {
 ```
 
 Now you have a `POST /cart` endpoint that creates a new empty cart, and returns the `workflowID` and `runID` that uniquely identify this Workflow.
+
 The next endpoint is `GET /cart/{workflowID}/{runID}`, which returns the current state of the cart with the given `WorkflowID` and `runID`.
 Below is the `GetCartHandler()` function, which gets the `workflowID` and `runID` from the URL and executes a Query for the current state of the cart.
 
