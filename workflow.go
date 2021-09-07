@@ -114,7 +114,7 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 
 			err = workflow.ExecuteActivity(ctx, a.CreateStripeCharge, state).Get(ctx, nil)
 			if err != nil {
-				logger.Error("Invalid signal type %v", err)
+				logger.Error("Error creating stripe charge: %v", err)
 				return
 			}
 
