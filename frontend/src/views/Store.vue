@@ -44,9 +44,7 @@ export default {
   methods: {
     addToCart(item) {
       fetch(
-        `${API}/cart/${localStorage.getItem("workflow")}/${localStorage.getItem(
-          "run"
-        )}/add`,
+        `${API}/cart/${localStorage.getItem("workflow")}/add`,
         {
           method: "PUT",
           headers: {
@@ -90,7 +88,6 @@ export default {
         })
         .then((data) => {
           localStorage.setItem("workflow", data.workflowID);
-          localStorage.setItem("run", data.runID);
         })
         .catch((err) => {
           console.log(err);
@@ -115,11 +112,9 @@ export default {
         console.log(err);
       });
 
-    if (localStorage.getItem("run")) {
+    if (localStorage.getItem("workflow")) {
       fetch(
-        `${API}/cart/${localStorage.getItem("workflow")}/${localStorage.getItem(
-          "run"
-        )}`,
+        `${API}/cart/${localStorage.getItem("workflow")}`,
         {
           method: "GET",
           headers: {

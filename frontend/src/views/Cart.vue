@@ -57,9 +57,7 @@ export default {
     },
     removeItem(item) {
       fetch(
-        `${API}/cart/${localStorage.getItem("workflow")}/${localStorage.getItem(
-          "run"
-        )}/remove`,
+        `${API}/cart/${localStorage.getItem("workflow")}/remove`,
         {
           method: "PUT",
           headers: {
@@ -81,14 +79,12 @@ export default {
     },
   },
   created() {
-    if (!localStorage.getItem("run")) {
+    if (!localStorage.getItem("workflow")) {
       this.loading = false;
       return;
     }
     fetch(
-      `${API}/cart/${localStorage.getItem("workflow")}/${localStorage.getItem(
-        "run"
-      )}`,
+      `${API}/cart/${localStorage.getItem("workflow")}`,
       {
         method: "GET",
         headers: {
