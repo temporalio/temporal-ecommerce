@@ -44,11 +44,11 @@ func main() {
 	r := mux.NewRouter()
 	r.Handle("/products", http.HandlerFunc(GetProductsHandler)).Methods("GET")
 	r.Handle("/cart", http.HandlerFunc(CreateCartHandler)).Methods("POST")
-	r.Handle("/cart/{workflowID}/{runID}", http.HandlerFunc(GetCartHandler)).Methods("GET")
-	r.Handle("/cart/{workflowID}/{runID}/add", http.HandlerFunc(AddToCartHandler)).Methods("PUT")
-	r.Handle("/cart/{workflowID}/{runID}/remove", http.HandlerFunc(RemoveFromCartHandler)).Methods("PUT")
-	r.Handle("/cart/{workflowID}/{runID}/checkout", http.HandlerFunc(CheckoutHandler)).Methods("PUT")
-	r.Handle("/cart/{workflowID}/{runID}/email", http.HandlerFunc(UpdateEmailHandler)).Methods("PUT")
+	r.Handle("/cart/{workflowID}", http.HandlerFunc(GetCartHandler)).Methods("GET")
+	r.Handle("/cart/{workflowID}/add", http.HandlerFunc(AddToCartHandler)).Methods("PUT")
+	r.Handle("/cart/{workflowID}/remove", http.HandlerFunc(RemoveFromCartHandler)).Methods("PUT")
+	r.Handle("/cart/{workflowID}/checkout", http.HandlerFunc(CheckoutHandler)).Methods("PUT")
+	r.Handle("/cart/{workflowID}/email", http.HandlerFunc(UpdateEmailHandler)).Methods("PUT")
 
 	r.NotFoundHandler = http.HandlerFunc(NotFoundHandler)
 
@@ -90,7 +90,6 @@ func CreateCartHandler(w http.ResponseWriter, r *http.Request) {
 	res := make(map[string]interface{})
 	res["cart"] = cart
 	res["workflowID"] = we.GetID()
-	res["runID"] = we.GetRunID()
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(res)
@@ -98,7 +97,7 @@ func CreateCartHandler(w http.ResponseWriter, r *http.Request) {
 
 func GetCartHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	response, err := temporal.QueryWorkflow(context.Background(), vars["workflowID"], vars["runID"], "getCart")
+	response, err := temporal.QueryWorkflow(context.Background(), vars["workflowID"], "", "getCart")
 	if err != nil {
 		WriteError(w, err)
 		return
@@ -124,7 +123,7 @@ func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
 
 	update := app.AddToCartSignal{Route: app.RouteTypes.ADD_TO_CART, Item: item}
 
-	err = temporal.SignalWorkflow(context.Background(), vars["workflowID"], vars["runID"], app.SignalChannelName, update)
+	err = temporal.SignalWorkflow(context.Background(), vars["workflowID"], "", "ADD_TO_CART_CHANNEL", update)
 	if err != nil {
 		WriteError(w, err)
 		return
@@ -147,7 +146,7 @@ func RemoveFromCartHandler(w http.ResponseWriter, r *http.Request) {
 
 	update := app.RemoveFromCartSignal{Route: app.RouteTypes.REMOVE_FROM_CART, Item: item}
 
-	err = temporal.SignalWorkflow(context.Background(), vars["workflowID"], vars["runID"], app.SignalChannelName, update)
+	err = temporal.SignalWorkflow(context.Background(), vars["workflowID"], "", "REMOVE_FROM_CART_CHANNEL", update)
 	if err != nil {
 		WriteError(w, err)
 		return
@@ -171,7 +170,7 @@ func UpdateEmailHandler(w http.ResponseWriter, r *http.Request) {
 
 	updateEmail := app.UpdateEmailSignal{Route: app.RouteTypes.UPDATE_EMAIL, Email: body.Email}
 
-	err = temporal.SignalWorkflow(context.Background(), vars["workflowID"], vars["runID"], app.SignalChannelName, updateEmail)
+	err = temporal.SignalWorkflow(context.Background(), vars["workflowID"], "", "UPDATE_CART_CHANNEL", updateEmail)
 	if err != nil {
 		WriteError(w, err)
 		return
@@ -195,7 +194,7 @@ func CheckoutHandler(w http.ResponseWriter, r *http.Request) {
 
 	checkout := app.CheckoutSignal{Route: app.RouteTypes.CHECKOUT, Email: body.Email}
 
-	err = temporal.SignalWorkflow(context.Background(), vars["workflowID"], vars["runID"], app.SignalChannelName, checkout)
+	err = temporal.SignalWorkflow(context.Background(), vars["workflowID"], "", "CHECKOUT_CHANNEL", checkout)
 	if err != nil {
 		WriteError(w, err)
 		return

@@ -12,6 +12,6 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/stripe/stripe-go v70.15.0+incompatible
 	github.com/stripe/stripe-go/v72 v72.39.0
-	go.temporal.io/sdk v1.6.0
+	go.temporal.io/sdk v1.9.0
 	golang.org/x/tools/gopls v0.6.6 // indirect
 )

@@ -33,9 +33,7 @@ export default {
     endCheckout() {
       if (this.email == null) return;
       fetch(
-        `${API}/${localStorage.getItem("workflow")}/${localStorage.getItem(
-          "run"
-        )}/checkout`,
+        `${API}/${localStorage.getItem("workflow")}/checkout`,
         {
           method: "PUT",
           headers: {
@@ -59,9 +57,7 @@ export default {
         });
       for (let item of this.cart) {
         fetch(
-          `${API}/${localStorage.getItem("workflow")}/${localStorage.getItem(
-            "run"
-          )}/remove`,
+          `${API}/${localStorage.getItem("workflow")}/remove`,
           {
             method: "PUT",
             headers: {
@@ -85,15 +81,12 @@ export default {
             console.log(err);
           });
       }
-      localStorage.removeItem("run");
       this.success = true;
     },
   },
   created() {
     fetch(
-      `${API}/${localStorage.getItem("workflow")}/${localStorage.getItem(
-        "run"
-      )}`,
+      `${API}/${localStorage.getItem("workflow")}`,
       {
         method: "GET",
         headers: {

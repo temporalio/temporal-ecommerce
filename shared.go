@@ -1,9 +1,5 @@
 package app
 
-var (
-	SignalChannelName = "cartMessages"
-)
-
 type (
 	Product struct {
 		Id          int

@@ -49,7 +49,6 @@ curl -X POST http://localhost:3000/cart
 
 # response:
 # {"cart":{"Items":[],"Email":""},
-# "runID":"4a4436be-3307-42ea-a9ab-3b63f5520bee",
 #  "workflowID":"CART-1619483151"}
 
 # add item
@@ -77,24 +76,24 @@ const axios = require('axios');
 void async function main() {
   let { data } = await axios.post('http://localhost:3001/cart');
 
-  const { runID, workflowID } = data;
-  console.log(runID, workflowID)
+  const { workflowID } = data;
+  console.log(workflowID)
 
-  await axios.put(`http://localhost:3001/cart/${workflowID}/${runID}/add`, { ProductID: 1, Quantity: 2 });
+  await axios.put(`http://localhost:3001/cart/${workflowID}/add`, { ProductID: 1, Quantity: 2 });
 
-  ({ data } = await axios.get(`http://localhost:3001/cart/${workflowID}/${runID}`));
+  ({ data } = await axios.get(`http://localhost:3001/cart/${workflowID}`));
   console.log(data);
   assert.deepEqual(data.Items, [ { ProductId: 1, Quantity: 2 } ]);
 
-  await axios.put(`http://localhost:3001/cart/${workflowID}/${runID}/remove`, { ProductID: 1, Quantity: 1 });
+  await axios.put(`http://localhost:3001/cart/${workflowID}/remove`, { ProductID: 1, Quantity: 1 });
 
-  ({ data } = await axios.get(`http://localhost:3001/cart/${workflowID}/${runID}`));
+  ({ data } = await axios.get(`http://localhost:3001/cart/${workflowID}`));
   console.log(data);
   assert.deepEqual(data.Items, [ { ProductId: 1, Quantity: 1 } ]);
 
-  await axios.put(`http://localhost:3001/cart/${workflowID}/${runID}/checkout`, { Email: 'val@temporal.io' });
+  await axios.put(`http://localhost:3001/cart/${workflowID}/checkout`, { Email: 'val@temporal.io' });
 
-  ({ data } = await axios.get(`http://localhost:3001/cart/${workflowID}/${runID}`));
+  ({ data } = await axios.get(`http://localhost:3001/cart/${workflowID}`));
   console.log(data);
 }();
 ```

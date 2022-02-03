@@ -32,9 +32,10 @@ func main() {
 		log.Fatalln("unable to execute workflow", err)
 	}
 
-	err = c.SignalWorkflow(context.Background(), workflowID, we.GetRunID(), app.SignalChannelName, nil)
+	update := app.AddToCartSignal{Route: app.RouteTypes.ADD_TO_CART, Item: app.CartItem{ProductId:0, Quantity: 1}}
+	err = c.SignalWorkflow(context.Background(), workflowID, "", "ADD_TO_CART_CHANNEL", update)
 
-	resp, err := c.QueryWorkflow(context.Background(), workflowID, we.GetRunID(), "getCart")
+	resp, err := c.QueryWorkflow(context.Background(), workflowID, "", "getCart")
 	if err != nil {
 		log.Fatalln("Unable to query workflow", err)
 	}
