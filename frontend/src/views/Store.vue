@@ -122,7 +122,15 @@ export default {
             "Content-Type": "application/json",
           },
         }
-      ).catch(() => {
+      ).
+      then(res => {
+        if (res.status >= 400) {
+          return this.createNewCart();
+        }
+
+        return res;
+      }).
+      catch(() => {
         this.createNewCart();
       });
     } else {

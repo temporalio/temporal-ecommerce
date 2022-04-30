@@ -33,7 +33,7 @@ export default {
     endCheckout() {
       if (this.email == null) return;
       fetch(
-        `${API}/${localStorage.getItem("workflow")}/checkout`,
+        `${API}/cart/${localStorage.getItem("workflow")}/checkout`,
         {
           method: "PUT",
           headers: {
@@ -57,7 +57,7 @@ export default {
         });
       for (let item of this.cart) {
         fetch(
-          `${API}/${localStorage.getItem("workflow")}/remove`,
+          `${API}/cart/${localStorage.getItem("workflow")}/remove`,
           {
             method: "PUT",
             headers: {
@@ -86,7 +86,7 @@ export default {
   },
   created() {
     fetch(
-      `${API}/${localStorage.getItem("workflow")}`,
+      `${API}/cart/${localStorage.getItem("workflow")}`,
       {
         method: "GET",
         headers: {
