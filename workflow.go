@@ -40,10 +40,10 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 		return err
 	}
 
-	addToCartChannel := workflow.GetSignalChannel(ctx, "ADD_TO_CART_CHANNEL")
-	removeFromCartChannel := workflow.GetSignalChannel(ctx, "REMOVE_FROM_CART_CHANNEL")
-	updateCartChannel := workflow.GetSignalChannel(ctx, "UPDATE_CART_CHANNEL")
-	checkoutChannel := workflow.GetSignalChannel(ctx, "CHECKOUT_CHANNEL")
+	addToCartChannel := workflow.GetSignalChannel(ctx, SignalChannels.ADD_TO_CART_CHANNEL)
+	removeFromCartChannel := workflow.GetSignalChannel(ctx, SignalChannels.REMOVE_FROM_CART_CHANNEL)
+	updateEmailChannel := workflow.GetSignalChannel(ctx, SignalChannels.UPDATE_EMAIL_CHANNEL)
+	checkoutChannel := workflow.GetSignalChannel(ctx, SignalChannels.CHECKOUT_CHANNEL)
 	checkedOut := false
 	sentAbandonedCartEmail := false
 
@@ -79,7 +79,7 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 			state.RemoveFromCart(message.Item)
 		})
 
-		selector.AddReceive(updateCartChannel, func(c workflow.ReceiveChannel, _ bool) {
+		selector.AddReceive(updateEmailChannel, func(c workflow.ReceiveChannel, _ bool) {
 			var signal interface{}
 			c.Receive(ctx, &signal)
 
@@ -175,4 +175,5 @@ func (state *CartState) RemoveFromCart(item CartItem) {
 		break
 	}
 }
+
 // @@@SNIPEND

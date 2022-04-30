@@ -7,9 +7,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
-	//"go.temporal.io/sdk/activity"
 	"go.temporal.io/sdk/testsuite"
-	// "go.temporal.io/sdk/client"
 
 	"time"
 )
@@ -41,9 +39,9 @@ func (s *UnitTestSuite) Test_AddToCart() {
 
 		update := AddToCartSignal{
 			Route: RouteTypes.ADD_TO_CART,
-			Item: CartItem{ProductId: 1, Quantity: 1},
+			Item:  CartItem{ProductId: 1, Quantity: 1},
 		}
-		s.env.SignalWorkflow("cartMessages", update)
+		s.env.SignalWorkflow(SignalChannels.ADD_TO_CART_CHANNEL, update)
 	}, time.Millisecond*1)
 
 	s.env.RegisterDelayedCallback(func() {
@@ -66,9 +64,9 @@ func (s *UnitTestSuite) Test_RemoveFromCart() {
 	s.env.RegisterDelayedCallback(func() {
 		update := AddToCartSignal{
 			Route: RouteTypes.ADD_TO_CART,
-			Item: CartItem{ProductId: 1, Quantity: 2},
+			Item:  CartItem{ProductId: 1, Quantity: 2},
 		}
-		s.env.SignalWorkflow("cartMessages", update)
+		s.env.SignalWorkflow(SignalChannels.ADD_TO_CART_CHANNEL, update)
 	}, time.Millisecond*1)
 
 	// Remove 1 item from the cart
@@ -82,9 +80,9 @@ func (s *UnitTestSuite) Test_RemoveFromCart() {
 
 		update := AddToCartSignal{
 			Route: RouteTypes.REMOVE_FROM_CART,
-			Item: CartItem{ProductId: 1, Quantity: 1},
+			Item:  CartItem{ProductId: 1, Quantity: 1},
 		}
-		s.env.SignalWorkflow("cartMessages", update)
+		s.env.SignalWorkflow(SignalChannels.REMOVE_FROM_CART_CHANNEL, update)
 	}, time.Millisecond*2)
 
 	s.env.ExecuteWorkflow(CartWorkflow, cart)
@@ -105,7 +103,7 @@ func (s *UnitTestSuite) Test_Checkout() {
 	var a *Activities
 
 	s.env.OnActivity(a.CreateStripeCharge, mock.Anything, mock.Anything).Return(
-		func(_ context.Context, _ CartState) (error) {
+		func(_ context.Context, _ CartState) error {
 			return nil
 		})
 
@@ -113,9 +111,9 @@ func (s *UnitTestSuite) Test_Checkout() {
 	s.env.RegisterDelayedCallback(func() {
 		update := AddToCartSignal{
 			Route: RouteTypes.ADD_TO_CART,
-			Item: CartItem{ProductId: 1, Quantity: 1},
+			Item:  CartItem{ProductId: 1, Quantity: 1},
 		}
-		s.env.SignalWorkflow("cartMessages", update)
+		s.env.SignalWorkflow(SignalChannels.ADD_TO_CART_CHANNEL, update)
 	}, time.Millisecond*1)
 
 	// Check out
@@ -131,7 +129,7 @@ func (s *UnitTestSuite) Test_Checkout() {
 			Route: RouteTypes.CHECKOUT,
 			Email: "test@temporal.io",
 		}
-		s.env.SignalWorkflow("cartMessages", update)
+		s.env.SignalWorkflow(SignalChannels.CHECKOUT_CHANNEL, update)
 	}, time.Millisecond*2)
 
 	// Workflow should be completed after checking out
@@ -149,7 +147,7 @@ func (s *UnitTestSuite) Test_AbandonedCart() {
 
 	sendTo := ""
 	s.env.OnActivity(a.SendAbandonedCartEmail, mock.Anything, mock.Anything).Return(
-		func(_ context.Context, _sendTo string) (error) {
+		func(_ context.Context, _sendTo string) error {
 			sendTo = _sendTo
 			return nil
 		})
@@ -158,21 +156,21 @@ func (s *UnitTestSuite) Test_AbandonedCart() {
 	s.env.RegisterDelayedCallback(func() {
 		update := AddToCartSignal{
 			Route: RouteTypes.ADD_TO_CART,
-			Item: CartItem{ProductId: 1, Quantity: 1},
+			Item:  CartItem{ProductId: 1, Quantity: 1},
 		}
-		s.env.SignalWorkflow("cartMessages", update)
+		s.env.SignalWorkflow(SignalChannels.ADD_TO_CART_CHANNEL, update)
 
 		updateEmail := UpdateEmailSignal{
 			Route: RouteTypes.UPDATE_EMAIL,
 			Email: "abandoned_test@temporal.io",
 		}
-		s.env.SignalWorkflow("cartMessages", updateEmail)
+		s.env.SignalWorkflow(SignalChannels.UPDATE_EMAIL_CHANNEL, updateEmail)
 	}, time.Millisecond*1)
 
 	// Wait for 10 mins and make sure abandoned cart email has been sent
 	s.env.RegisterDelayedCallback(func() {
 		s.Equal(sendTo, "abandoned_test@temporal.io")
-	}, abandonedCartTimeout + time.Millisecond*2)
+	}, abandonedCartTimeout+time.Millisecond*2)
 
 	s.env.ExecuteWorkflow(CartWorkflow, cart)
 

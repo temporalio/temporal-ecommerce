@@ -41,6 +41,18 @@ var Products = []Product{
 	},
 }
 
+var SignalChannels = struct {
+	ADD_TO_CART_CHANNEL      string
+	REMOVE_FROM_CART_CHANNEL string
+	UPDATE_EMAIL_CHANNEL     string
+	CHECKOUT_CHANNEL         string
+}{
+	ADD_TO_CART_CHANNEL:      "ADD_TO_CART_CHANNEL",
+	REMOVE_FROM_CART_CHANNEL: "REMOVE_FROM_CART_CHANNEL",
+	UPDATE_EMAIL_CHANNEL:     "UPDATE_EMAIL_CHANNEL",
+	CHECKOUT_CHANNEL:         "CHECKOUT_CHANNEL",
+}
+
 var RouteTypes = struct {
 	ADD_TO_CART      string
 	REMOVE_FROM_CART string
