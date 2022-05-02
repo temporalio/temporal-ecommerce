@@ -9,9 +9,9 @@ import (
 )
 
 type Activities struct {
-	StripeKey string
+	StripeKey     string
 	MailgunDomain string
-	MailgunKey string
+	MailgunKey    string
 }
 
 func (a *Activities) CreateStripeCharge(_ context.Context, cart CartState) error {
