@@ -5,6 +5,7 @@ This is a demo app for a blogpost series showing the process of developing a ful
 - [Part 1: Getting Started](https://docs.temporal.io/blog/build-an-ecommerce-app-with-temporal-part-1)
 - [Part 2: Reminder Emails](https://docs.temporal.io/blog/build-an-ecommerce-app-with-temporal-part-2-reminder-emails)
 - [Part 3: Testing](https://docs.temporal.io/blog/build-an-ecommerce-app-with-temporal-part-3-testing)
+- [Part 4: REST API](https://learn.temporal.io/tutorials/go/ecommerce/build-an-ecommerce-app-with-temporal-part-4-rest-api)
 
 ## Instructions
 
@@ -14,10 +15,11 @@ To run the worker, make sure you have a local instance of Temporal Server runnin
 go run worker/main.go
 ```
 
-To run the API server:
+To run the API server, set the `STRIPE_PRIVATE_KEY`, `MAILGUN_DOMAIN`, and `MAILGUN_PRIVATE_KEY` environment variables and run the server as follows.
+You can use fake API keys if all you want to do is add or remove from the cart, but you need to set up a [Mailgun API key](https://www.mailgun.com/) and [Stripe API key](https://stripe.com/) for checking out and abandoned cart emails.
 
 ```bash
-env PORT=3000 go run api/main.go
+env STRIPE_PRIVATE_KEY=stripe-key-here env MAILGUN_DOMAIN=mailgun-domain-here env MAILGUN_PRIVATE_KEY=mailgun-private-key-here env PORT=3001 go run api/main.go
 ```
 
 You can then run the UI on port 8080:
@@ -34,7 +36,7 @@ Here is a guide to the basic routes that you can see and what they expect:
 
 ```bash
 # get items
-curl http://localhost:3000/products
+curl http://localhost:3001/products
 
 # response:
 # {"products":[
@@ -45,19 +47,19 @@ curl http://localhost:3000/products
 # ]}
 
 # create cart
-curl -X POST http://localhost:3000/cart
+curl -X POST http://localhost:3001/cart
 
 # response:
 # {"cart":{"Items":[],"Email":""},
 #  "workflowID":"CART-1619483151"}
 
 # add item
-curl -X PUT -d '{"ProductId":3,"Quantity":1}' -H 'Content-Type: application/json' http://localhost:3000/cart/CART-1619483151/4a4436be-3307-42ea-a9ab-3b63f5520bee/add
+curl -X PUT -d '{"ProductId":3,"Quantity":1}' -H 'Content-Type: application/json' http://localhost:3001/cart/CART-1619483151/4a4436be-3307-42ea-a9ab-3b63f5520bee/add
 
 # response: {"ok":1}
 
 # get cart
-curl http://localhost:3000/cart/CART-1619483151/4a4436be-3307-42ea-a9ab-3b63f5520bee
+curl http://localhost:3001/cart/CART-1619483151/4a4436be-3307-42ea-a9ab-3b63f5520bee
 
 # response:
 # {"Email":"","Items":[{"ProductId":3,"Quantity":1}]}

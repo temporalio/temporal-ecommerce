@@ -25,6 +25,16 @@ func main() {
 	// This worker hosts both Worker and Activity functions
 	w := worker.New(c, "CART_TASK_QUEUE", worker.Options{})
 
+	if stripeKey == "" {
+		log.Fatalln("Must set STRIPE_PRIVATE_KEY environment variable")
+	}
+	if mailgunDomain == "" {
+		log.Fatalln("Must set MAILGUN_DOMAIN environment variable")
+	}
+	if mailgunKey == "" {
+		log.Fatalln("Must set MAILGUN_PRIVATE_KEY environment variable")
+	}
+
 	a := &app.Activities{
 		StripeKey: stripeKey,
 		MailgunDomain: mailgunDomain,
