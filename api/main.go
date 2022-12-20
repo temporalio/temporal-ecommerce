@@ -123,7 +123,7 @@ func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
 
 	update := app.AddToCartSignal{Route: app.RouteTypes.ADD_TO_CART, Item: item}
 
-	err = temporal.SignalWorkflow(context.Background(), vars["workflowID"], "", "ADD_TO_CART_CHANNEL", update)
+	err = temporal.SignalWorkflow(context.Background(), vars["workflowID"], "", app.SignalChannels.ADD_TO_CART_CHANNEL, update)
 	if err != nil {
 		WriteError(w, err)
 		return
@@ -146,7 +146,7 @@ func RemoveFromCartHandler(w http.ResponseWriter, r *http.Request) {
 
 	update := app.RemoveFromCartSignal{Route: app.RouteTypes.REMOVE_FROM_CART, Item: item}
 
-	err = temporal.SignalWorkflow(context.Background(), vars["workflowID"], "", "REMOVE_FROM_CART_CHANNEL", update)
+	err = temporal.SignalWorkflow(context.Background(), vars["workflowID"], "", app.SignalChannels.REMOVE_FROM_CART_CHANNEL, update)
 	if err != nil {
 		WriteError(w, err)
 		return
@@ -170,7 +170,7 @@ func UpdateEmailHandler(w http.ResponseWriter, r *http.Request) {
 
 	updateEmail := app.UpdateEmailSignal{Route: app.RouteTypes.UPDATE_EMAIL, Email: body.Email}
 
-	err = temporal.SignalWorkflow(context.Background(), vars["workflowID"], "", "UPDATE_CART_CHANNEL", updateEmail)
+	err = temporal.SignalWorkflow(context.Background(), vars["workflowID"], "", app.SignalChannels.UPDATE_EMAIL_CHANNEL, updateEmail)
 	if err != nil {
 		WriteError(w, err)
 		return
@@ -194,7 +194,7 @@ func CheckoutHandler(w http.ResponseWriter, r *http.Request) {
 
 	checkout := app.CheckoutSignal{Route: app.RouteTypes.CHECKOUT, Email: body.Email}
 
-	err = temporal.SignalWorkflow(context.Background(), vars["workflowID"], "", "CHECKOUT_CHANNEL", checkout)
+	err = temporal.SignalWorkflow(context.Background(), vars["workflowID"], "", app.SignalChannels.CHECKOUT_CHANNEL, checkout)
 	if err != nil {
 		WriteError(w, err)
 		return
@@ -202,7 +202,7 @@ func CheckoutHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	res := make(map[string]interface{})
-	res["ok"] = 1
+	res["sent"] = true
 	json.NewEncoder(w).Encode(res)
 }
 

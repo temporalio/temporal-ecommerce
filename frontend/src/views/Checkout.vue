@@ -26,7 +26,6 @@ export default {
       success: false,
       email: null,
       items: [],
-      cart: [],
     };
   },
   methods: {
@@ -47,6 +46,9 @@ export default {
       )
         .then((response) => {
           console.log(response);
+          localStorage.setItem("workflow", "");
+          this.items = [];
+
           return response.json();
         })
         .then((data) => {
@@ -55,32 +57,6 @@ export default {
         .catch((err) => {
           console.log(err);
         });
-      for (let item of this.cart) {
-        fetch(
-          `${API}/cart/${localStorage.getItem("workflow")}/remove`,
-          {
-            method: "PUT",
-            headers: {
-              accept: "application/json",
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              ProductId: item.Id,
-              Quantity: item.Quantity,
-            }),
-          }
-        )
-          .then((response) => {
-            console.log(response);
-            return response.json();
-          })
-          .then((data) => {
-            console.log(data);
-          })
-          .catch((err) => {
-            console.log(err);
-          });
-      }
       this.success = true;
     },
   },
@@ -112,16 +88,6 @@ export default {
       })
       .then((response) => {
         return response.json();
-      })
-      .then((data) => {
-        this.items.filter((value) => {
-          for (let i = 0; i < data.products.length; i++) {
-            if (value.ProductId == data.products[i].Id) {
-              data.products[i].Quantity = value.Quantity;
-              this.cart.push(data.products[i]);
-            }
-          }
-        });
       })
       .catch((err) => {
         console.log(err);
