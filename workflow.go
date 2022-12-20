@@ -91,6 +91,7 @@ func CartWorkflow(ctx workflow.Context, state CartState) error {
 			}
 
 			state.Email = message.Email
+			sentAbandonedCartEmail = false
 		})
 
 		selector.AddReceive(checkoutChannel, func(c workflow.ReceiveChannel, _ bool) {
