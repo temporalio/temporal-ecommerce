@@ -49,6 +49,9 @@ func (a *Activities) CreateStripeCharge(_ context.Context, cart CartState) error
 }
 
 func (a *Activities) SendAbandonedCartEmail(_ context.Context, email string) error {
+	if email == "" {
+		return nil
+	}
 	mg := mailgun.NewMailgun(a.MailgunDomain, a.MailgunKey)
 	m := mg.NewMessage(
 		"noreply@"+a.MailgunDomain,

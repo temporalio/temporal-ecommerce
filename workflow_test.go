@@ -175,6 +175,38 @@ func (s *UnitTestSuite) Test_AbandonedCart() {
 	s.env.ExecuteWorkflow(CartWorkflow, cart)
 
 	s.True(s.env.IsWorkflowCompleted())
+	s.Equal(sendTo, "abandoned_test@temporal.io")
+}
+
+func (s *UnitTestSuite) Test_AbandonedCartWithoutEmail() {
+	cart := CartState{Items: make([]CartItem, 0)}
+
+	var a *Activities
+
+	sendTo := "initial value"
+	s.env.OnActivity(a.SendAbandonedCartEmail, mock.Anything, mock.Anything).Return(
+		func(_ context.Context, _sendTo string) error {
+			sendTo = _sendTo
+			return nil
+		})
+
+	// Add a product to the cart
+	s.env.RegisterDelayedCallback(func() {
+		update := AddToCartSignal{
+			Route: RouteTypes.ADD_TO_CART,
+			Item:  CartItem{ProductId: 1, Quantity: 1},
+		}
+		s.env.SignalWorkflow(SignalChannels.ADD_TO_CART_CHANNEL, update)
+	}, time.Millisecond*1)
+
+	// Wait for 10 mins and make sure abandoned cart email was not sent
+	s.env.RegisterDelayedCallback(func() {
+		s.Equal(sendTo, "")
+	}, abandonedCartTimeout+time.Millisecond*2)
+
+	s.env.ExecuteWorkflow(CartWorkflow, cart)
+
+	s.True(s.env.IsWorkflowCompleted())
 }
 
 func TestUnitTestSuite(t *testing.T) {
