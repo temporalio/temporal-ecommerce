@@ -1,7 +1,6 @@
 'use strict';
 
 const app = Vue.createApp({
-  data: () => ({ children: [] }),
   template: `
   <div>
     <div id="nav">

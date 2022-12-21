@@ -28,7 +28,6 @@ describe('Cart', function() {
   it('fetches current cart', async function() {
     let appInstance = null;
     const app = createSSRApp({
-      data: () => ({ children: [] }),
       template: '<Cart></Cart>',
       created: function() {
         appInstance = this;
@@ -46,7 +45,6 @@ describe('Cart', function() {
   it('removes item cart', async function() {
     let appInstance = null;
     const app = createSSRApp({
-      data: () => ({ children: [] }),
       template: '<Cart></Cart>',
       created: function() {
         appInstance = this;
@@ -56,7 +54,7 @@ describe('Cart', function() {
 
     await renderToString(app);
 
-    const cartInstance = appInstance.children[0];
+    const cartInstance = appInstance.$options.$children[0];
     sinon.stub(api, 'removeFromCart').callsFake(() => Promise.resolve());
 
     assert.deepStrictEqual([...cartInstance.cart], [{ ProductId: 0, Quantity: 2 }]);
