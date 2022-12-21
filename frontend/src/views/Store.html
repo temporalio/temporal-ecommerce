@@ -1,0 +1,30 @@
+<div id="Store">
+  <h1>Welcome to the Store</h1>
+  <div class="card-group">
+    <div
+      class="card"
+      v-for="item in items"
+      :key="item.Id"
+      style="width: 18rem"
+    >
+      <img
+        :src="item.Image"
+        style="height: 30rem"
+        class="card-img-top"
+        alt="..."
+      />
+      <div class="card-body">
+        <h5 class="card-title">{{ item.Name }}</h5>
+        <p class="card-text">
+          Some quick example text to build on the card title and make up the
+          bulk of the card's content. Starting at ${{ item.Price }}
+        </p>
+        <button class="btn btn-primary" @click="addToCart(item)">
+          Add to Cart
+        </button>
+      </div>
+    </div>
+  </div>
+  <div v-if="added" class="alert alert-success">Added to Cart!</div>
+  <div v-if="error" class="alert alert-danger">Something went wrong.</div>
+</div>
