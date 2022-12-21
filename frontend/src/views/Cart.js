@@ -1,5 +1,6 @@
 'use strict';
 
+const BaseComponent = require('./BaseComponent');
 const api = require('../api');
 const template = require('./Cart.html');
 
@@ -12,6 +13,7 @@ module.exports = {
       loading: true,
     };
   },
+  extends: BaseComponent,
   methods: {
     beginCheckout() {
       if (this.cart.length == 0) return;
@@ -31,13 +33,7 @@ module.exports = {
       });
     },
   },
-  destroyed() {
-    this.$parent.children = this.$parent.children.filter(el => el !== this);
-  },
   created() {
-    this.$parent.children = this.$parent.children || [];
-    this.$parent.children.push(this);
-
     if (!localStorage.getItem('workflow')) {
       this.loading = false;
       return;

@@ -1,5 +1,6 @@
 'use strict';
 
+const BaseComponent = require('./BaseComponent');
 const api = require('../api');
 const template = require('./Store.html');
 
@@ -12,6 +13,7 @@ module.exports = {
       error: null,
     };
   },
+  extends: BaseComponent,
   methods: {
     addToCart(item) {
       api.addToCart(localStorage.getItem('workflow'), item)
@@ -39,13 +41,7 @@ module.exports = {
         });
     },
   },
-  destroyed() {
-    this.$parent.children = this.$parent.children.filter(el => el !== this);
-  },
   created() {
-    this.$parent.children = this.$parent.children || [];
-    this.$parent.children.push(this);
-
     api.getProducts()
       .then((data) => {
         return (this.items = data.products);
