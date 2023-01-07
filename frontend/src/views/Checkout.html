@@ -1,0 +1,19 @@
+<div id="Checkout">
+  <div>
+    <h1 v-if="success" class="alert alert-success">
+      Thank you for your purchase!
+    </h1>
+    <div v-else class="card">
+      <div class="card-body">Checkout</div>
+      <form action="" class="card-body">
+        <div class="form-group">
+          <label class="d-flex align-left form-label mt-1">Email</label>
+          <input type="text" class="form-control" v-model="email" />
+        </div>
+        <button class="btn btn-warning mt-1" @click="endCheckout">
+          Complete Transaction
+        </button>
+      </form>
+    </div>
+  </div>
+</div>

@@ -9,14 +9,17 @@ This is a demo app for a blogpost series showing the process of developing a ful
 
 ## Instructions
 
+To run the worker and server, you must set the `STRIPE_PRIVATE_KEY`, `MAILGUN_DOMAIN`, and `MAILGUN_PRIVATE_KEY` environment variables.
+You can set the values to "test", which will allow you to add and remove elements from your cart.
+But you won't be able to checkout or receive abandoned cart notifications if these values aren't set.
+
 To run the worker, make sure you have a local instance of Temporal Server running (e.g. with [docker-compose](https://github.com/temporalio/docker-compose)), then run:
 
 ```bash
-go run worker/main.go
+env STRIPE_PRIVATE_KEY=stripe-key-here env MAILGUN_DOMAIN=mailgun-domain-here env MAILGUN_PRIVATE_KEY=mailgun-private-key-here go run worker/main.go
 ```
 
-To run the API server, set the `STRIPE_PRIVATE_KEY`, `MAILGUN_DOMAIN`, and `MAILGUN_PRIVATE_KEY` environment variables and run the server as follows.
-You can use fake API keys if all you want to do is add or remove from the cart, but you need to set up a [Mailgun API key](https://www.mailgun.com/) and [Stripe API key](https://stripe.com/) for checking out and abandoned cart emails.
+To run the API server, you must also set the `PORT` environment variable as follows.
 
 ```bash
 env STRIPE_PRIVATE_KEY=stripe-key-here env MAILGUN_DOMAIN=mailgun-domain-here env MAILGUN_PRIVATE_KEY=mailgun-private-key-here env PORT=3001 go run api/main.go

@@ -40,6 +40,7 @@ func main() {
 	if err != nil {
 		log.Fatalln("unable to create Temporal client", err)
 	}
+	log.Println("Temporal client connected")
 
 	r := mux.NewRouter()
 	r.Handle("/products", http.HandlerFunc(GetProductsHandler)).Methods("GET")
@@ -57,6 +58,8 @@ func main() {
 	http.Handle("/", cors(r))
 	server := httpx.NewServer(":"+HTTPPort, http.DefaultServeMux)
 	server.WriteTimeout = time.Second * 240
+
+	log.Println("Starting server on port: "+HTTPPort)
 
 	err = server.Start()
 	if err != nil {
