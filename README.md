@@ -25,7 +25,7 @@ You can then run the UI on port 8080:
 ```
 cd frontend
 npm install
-npm run serve
+npm start
 ```
 
 ## Interacting with the API server with cURL
