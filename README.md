@@ -8,7 +8,7 @@ To run the worker and server, you must set the `STRIPE_PRIVATE_KEY`, `MAILGUN_DO
 You can set the values to "test", which will allow you to add and remove elements from your cart.
 But you won't be able to checkout or receive abandoned cart notifications if these values aren't set.
 
-To run the worker, make sure you have a local instance of Temporal Server running (e.g. with [the Temporal CLI](https://github.com/temporalio/cli), then run:
+To run the worker, make sure you have a local instance of Temporal Server running (e.g. with [the Temporal CLI](https://github.com/temporalio/cli)), then run:
 
 ```bash
 env STRIPE_PRIVATE_KEY=stripe-key-here env MAILGUN_DOMAIN=mailgun-domain-here env MAILGUN_PRIVATE_KEY=mailgun-private-key-here go run worker/main.go
