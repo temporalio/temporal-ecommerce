@@ -52,7 +52,7 @@ func CartWorkflowExample(ctx workflow.Context, state CartState) error {
 		return err
 	}
 
-	channel := workflow.GetSignalChannel(ctx, "cartMessages")
+	channel := workflow.GetSignalChannel(ctx, "updateCart")
 	selector := workflow.NewSelector(ctx)
 
 	selector.AddReceive(channel, func(c workflow.ReceiveChannel, _ bool) {
@@ -145,7 +145,7 @@ func main() {
 		log.Fatalln("unable to execute workflow", err)
 	}
 
-	err = c.SignalWorkflow(context.Background(), workflowID, we.GetRunID(), app.SignalChannelName, nil)
+	err = c.SignalWorkflow(context.Background(), workflowID, we.GetRunID(), "updateCart", nil)
 
 	resp, err := c.QueryWorkflow(context.Background(), workflowID, we.GetRunID(), "getCart")
 	if err != nil {
