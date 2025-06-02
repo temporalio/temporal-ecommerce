@@ -8,7 +8,7 @@
     "test": "mocha test/*.test.js"
   },
   "dependencies": {
-    "express": "4.18.2",
+    "express": "4.20.0",
     "webpack": "5.76.0"
   },
   "devDependencies": {
