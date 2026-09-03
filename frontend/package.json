@@ -12,7 +12,7 @@
     "webpack": "5.76.0"
   },
   "devDependencies": {
-    "mocha": "10.2.0",
+    "mocha": "10.8.2",
     "node-fetch": "2.x",
     "node-localstorage": "2.2.1",
     "sinon": "15.0.1",
