@@ -32,8 +32,13 @@ func main() {
 		log.Fatalln("unable to execute workflow", err)
 	}
 
-	update := app.AddToCartSignal{Route: app.RouteTypes.ADD_TO_CART, Item: app.CartItem{ProductId:0, Quantity: 1}}
+	log.Println("Started workflow", "WorkflowID", we.GetID(), "RunID", we.GetRunID())
+
+	update := app.AddToCartSignal{Route: app.RouteTypes.ADD_TO_CART, Item: app.CartItem{ProductId: 0, Quantity: 1}}
 	err = c.SignalWorkflow(context.Background(), workflowID, "", "ADD_TO_CART_CHANNEL", update)
+	if err != nil {
+		log.Fatalln("unable to signal workflow", err)
+	}
 
 	resp, err := c.QueryWorkflow(context.Background(), workflowID, "", "getCart")
 	if err != nil {
@@ -47,4 +52,5 @@ func main() {
 	// 2021/03/31 15:43:54 Received query result Result map[Email: Items:[map[ProductId:0 Quantity:1]]]
 	log.Println("Received query result", "Result", result)
 }
+
 // @@@SNIPEND
